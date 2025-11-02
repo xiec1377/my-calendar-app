@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar as SmallCalendar} from "@/components/ui/calendar";
+import { Calendar as SmallCalendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogClose,
@@ -26,13 +26,37 @@ import { format } from "date-fns";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "../styles/calendar.css";
+
+const CustomToolbar = ({ label, onNavigate, onView }) => {
+  return (
+    <div className="rbc-toolbar flex w-full px-4">
+      <button onClick={() => onNavigate("TODAY")}>Today</button>
+      <div className="rbc-btn-group">
+        <button onClick={() => onNavigate("PREV")}>{"<"}</button>
+        <span className="rbc-toolbar-label">{label}</span>
+        <button onClick={() => onNavigate("NEXT")}>{">"}</button>
+      </div>
+      <div className="rbc-btn-group flex gap-2">
+        <button onClick={() => onView("day")}>Day</button>
+        <button onClick={() => onView("week")}>Week</button>
+        <button onClick={() => onView("month")}>Month</button>
+      </div>
+    </div>
+  );
+};
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const localizer = momentLocalizer(moment);
+  const formats = {
+    dateFormat: "D", // Single digit day (1, 2, 3... instead of 01, 02, 03)
+    dayFormat: "ddd D", // Mon 1, Tue 2, etc.
+    monthHeaderFormat: "MMMM YYYY", // November 2025
+  };
   return (
     // max-w-3xl
-    <div className="flex w-full items-start justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <div className="flex h-full flex-col gap-4 p-8">
         {/* <Button variant="outline">+ Create</Button> */}
         <Dialog>
@@ -128,7 +152,7 @@ export default function Home() {
         </div> */}
       </div>
       <main className="flex w-full flex-row items-center justify-between bg-white dark:bg-black sm:items-start">
-        <div style={{ height: "600px" }}>
+        <div style={{ height: "100vh", width: "100%" }}>
           <Calendar
             localizer={localizer}
             // events={events}
@@ -136,6 +160,10 @@ export default function Home() {
             endAccessor="end"
             views={["month", "week", "day"]}
             defaultView="month"
+            formats={formats}
+            components={{
+              toolbar: CustomToolbar,
+            }}
           />
         </div>
       </main>
