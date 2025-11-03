@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar as SmallCalendar } from "@/components/ui/calendar";
 import {
   Dialog,
@@ -28,6 +28,8 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
 
+import { combineDateAndTimeUTC } from "@/lib/dateUtils";
+
 const CustomToolbar = ({ label, onNavigate, onView }) => {
   return (
     <div className="rbc-toolbar flex w-full px-4">
@@ -46,14 +48,123 @@ const CustomToolbar = ({ label, onNavigate, onView }) => {
   );
 };
 
+type CalendarEvent = {
+  id?: number;
+  title: string;
+  startDate?: string;
+  endDate?: string;
+  start: string;
+  end: string;
+  notes?: string;
+};
+
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [event, setEvent] = useState<CalendarEvent>({
+    title: "",
+    start: "",
+    end: "",
+    notes: "",
+  });
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const localizer = momentLocalizer(moment);
   const formats = {
     dateFormat: "D", // Single digit day (1, 2, 3... instead of 01, 02, 03)
     dayFormat: "ddd D", // Mon 1, Tue 2, etc.
     monthHeaderFormat: "MMMM YYYY", // November 2025
   };
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        console.log("event:", event);
+        const res = await fetch(
+          `/api/events?date=${encodeURIComponent(
+            new Date().toISOString().split("T")[0]
+          )}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        const data = await res.json();
+        console.log("FETCH EVENTS", data);
+        const newEvents = data.events.map((e: any) => ({
+          ...e,
+          start: new Date(e.start),
+          end: new Date(e.end),
+        }));
+        setEvents(newEvents);
+      } catch (error) {
+        console.error("error:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    console.log("name:", name, "value:", value);
+    setEvent((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCancel = () => {
+    setEvent({
+      title: "",
+      start: "",
+      end: "",
+      notes: "",
+    });
+  };
+
+  const handleSubmitEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("submitting event...");
+
+    try {
+      console.log("event----:", event);
+      console.log("hereeee:", event?.startDate, event?.start);
+      console.log(
+        "combineDateAndTimeUTC(event?.startDat",
+        combineDateAndTimeUTC(event?.startDate, event?.start)
+      );
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: event?.title || "Untitled",
+          start: combineDateAndTimeUTC(event?.startDate, event?.start),
+          end: combineDateAndTimeUTC(event?.endDate, event?.end),
+          notes: event?.notes,
+          // color: event?.colour,
+        }),
+      });
+
+      const data = await res.json();
+      console.log(data);
+    } catch (error) {
+      console.error("error:", error);
+    }
+  };
+
+  const apiEvents = [
+    {
+      title: "Team Meeting",
+      start: new Date("2025-11-02T14:00:00.000Z"), // UTC string
+      end: new Date("2025-11-02T15:00:00.000Z"),
+      notes: "Discuss project updates",
+    },
+    {
+      title: "Lunch with Client",
+      start: new Date("2025-11-02T14:00:00.000Z"),
+      end: new Date("2025-11-02T15:00:00.000Z"),
+    },
+  ];
   return (
     // max-w-3xl
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -76,59 +187,72 @@ export default function Home() {
               <div className="grid gap-4">
                 <Label htmlFor="event-name">Event Name</Label>
                 <Input
-                  id="event-name"
-                  name="name"
+                  id="title"
+                  name="title"
                   placeholder="Design machines"
+                  value={event.title}
+                  onChange={handleChange}
                 />
               </div>
               <div className="grid gap-4">
-                <Label htmlFor="date">Time</Label>
+                <Label htmlFor="date">Start</Label>
                 <div className="flex flex-row gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="flex-[2] justify-start text-left"
-                      >
-                        {/* <CalendarIcon className="mr-2 h-4 w-4" /> */}
-                        {date ? format(date, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
                   <Input
-                    id="date"
-                    name="date"
-                    defaultValue="@peduarte"
-                    type="time"
-                    className="flex-[1]"
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    className="flex-[2]"
+                    onChange={handleChange}
+                    value={event.startDate as string}
                   ></Input>
-                  -
                   <Input
-                    id="date"
-                    name="date"
-                    defaultValue="@peduarte"
+                    id="start"
+                    name="start"
                     type="time"
                     className="flex-[1]"
+                    onChange={handleChange}
+                    value={event.start as string}
+                  ></Input>
+                </div>
+                <Label htmlFor="date">End</Label>
+                <div className="flex flex-row gap-2">
+                  <Input
+                    id="endDate"
+                    name="endDate"
+                    type="date"
+                    className="flex-[2]"
+                    onChange={handleChange}
+                    value={event.endDate as string}
+                  ></Input>
+                  <Input
+                    id="end"
+                    name="end"
+                    type="time"
+                    className="flex-[1]"
+                    onChange={handleChange}
+                    value={event.end as string}
                   ></Input>
                 </div>
               </div>
               <div className="grid gap-4">
                 <Label htmlFor="notes">Notes</Label>
-                <Input id="notes" name="name" placeholder="Add notes here..." />
+                <Input
+                  id="notes"
+                  name="notes"
+                  placeholder="Add notes here..."
+                  value={event.notes}
+                  onChange={handleChange}
+                />
               </div>
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
+                  <Button variant="outline" onClick={handleCancel}>
+                    Cancel
+                  </Button>
                 </DialogClose>
-                <Button type="submit">Save changes</Button>
+                <Button type="submit" onClick={handleSubmitEvent}>
+                  Save changes
+                </Button>
               </DialogFooter>
             </DialogContent>
           </form>
@@ -155,7 +279,7 @@ export default function Home() {
         <div style={{ height: "100vh", width: "100%" }}>
           <Calendar
             localizer={localizer}
-            // events={events}
+            events={events}
             startAccessor="start"
             endAccessor="end"
             views={["month", "week", "day"]}
