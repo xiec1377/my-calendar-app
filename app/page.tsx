@@ -431,6 +431,7 @@ export default function Home() {
             startAccessor="start"
             endAccessor="end"
             views={["month", "week", "day"]}
+            date={date}
             defaultView="month"
             formats={formats}
             components={{
