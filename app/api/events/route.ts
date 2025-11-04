@@ -42,9 +42,10 @@ export async function GET(req: Request) {
     const dto = events.map((e) => ({
       id: e.id,
       title: e.title,
-      start: e.startTime.toISOString(), 
-      end: new Date(e.endTime).toISOString(), 
+      start: e.startTime ? e.startTime.toISOString() : null,
+      end: e.endTime ? new Date(e.endTime).toISOString() : null,
       notes: e.notes || '',
+      color: e.color || 'blue',
     }))
 
     return NextResponse.json({ events: dto })
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     console.log('body---', body)
-    const { title, start, end, notes } = body
+    const { title, start, end, notes, color } = body
 
     // if (!title || !start || !end) {y
     //   return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
         startTime: start,
         endTime: end,
         notes: notes || '',
+        color: color || 'blue',
       },
     })
 

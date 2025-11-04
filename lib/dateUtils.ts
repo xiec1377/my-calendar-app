@@ -7,7 +7,7 @@ export function combineDateAndTimeUTC(
   timeStr: string,
 ): string | null {
   console.log('here')
-  if (!dateStr || !timeStr) return null
+  if (!dateStr || !timeStr) return null 
   console.log('dateStr:', dateStr, 'timeStr:', timeStr)
 
   const [year, month, day] = dateStr.split('-').map(Number)

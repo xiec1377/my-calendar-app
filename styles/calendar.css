@@ -13,7 +13,9 @@
   padding: 1rem;
   font-weight: 600;
   background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
+  /* border-bottom: 2px solid #e5e7eb; */
+  border-bottom: unset !important;
+  background: inherit !important;
 }
 
 /* Toolbar */
@@ -73,12 +75,16 @@
 
 /* Today highlight */
 .rbc-today {
-  background-color: #dbeafe !important;
+  background-color: unset !important;
 }
 
+.rbc-header.rbc-today {
+  background-color: #e0f2fe !important;
+}
 /* Time slots */
 .rbc-time-slot {
-  border-top: 1px solid #f3f4f6;
+  /* border-top: 1px solid #f3f4f6; */
+  border-top: unset !important;
 }
 
 .rbc-current-time-indicator {
