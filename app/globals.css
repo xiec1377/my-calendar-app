@@ -120,3 +120,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+Button, Input[type="checkbox"] {
+  cursor: pointer;
+}
+
+Input {
+  cursor: text
+}
+

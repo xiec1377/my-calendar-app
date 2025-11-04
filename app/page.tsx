@@ -51,21 +51,61 @@ const CustomToolbar = ({ label, onNavigate, onView }) => {
 type CalendarEvent = {
   id?: number;
   title: string;
+  isAllDay?: boolean;
   startDate?: string;
   endDate?: string;
   start: string;
   end: string;
   notes?: string;
+  colour?: string;
 };
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [event, setEvent] = useState<CalendarEvent>({
     title: "",
     start: "",
     end: "",
     notes: "",
   });
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
+  const [modalOpen, setModalOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
+
+  const handleSelectEvent = async (
+    event: CalendarEvent,
+    e: React.MouseEvent
+  ) => {
+    e.preventDefault();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setPopoverPosition({
+      // x: rect.left + rect.width / 2,
+      // y: rect.top + rect.height,
+      x: rect.right,
+      // y: rect.top,
+      y: rect.top + rect.height / 2
+    });
+    setSelectedEvent(event);
+    // setAnchorEl(e.currentTarget); // use the clicked element as anchor
+    setModalOpen(true);
+
+    // optionally fetch full details
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      console.log("data:", data);
+      setSelectedEvent(data.event);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+    }
+  };
+
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const localizer = momentLocalizer(moment);
   const formats = {
@@ -154,10 +194,12 @@ export default function Home() {
 
   const apiEvents = [
     {
+      id: "123451",
       title: "Team Meeting",
       start: new Date("2025-11-02T14:00:00.000Z"), // UTC string
       end: new Date("2025-11-02T15:00:00.000Z"),
       notes: "Discuss project updates",
+      color: "red",
     },
     {
       title: "Lunch with Client",
@@ -165,6 +207,8 @@ export default function Home() {
       end: new Date("2025-11-02T15:00:00.000Z"),
     },
   ];
+
+  const colours = ["red", "green", "blue", "yellow", "purple", "orange"];
   return (
     // max-w-3xl
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -234,6 +278,15 @@ export default function Home() {
                   ></Input>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
+                <Input type="checkbox" id="notify" className="h-4 w-4" />
+                <Label
+                  htmlFor="notify"
+                  className="text-sm font-medium leading-none cursor-pointer"
+                >
+                  All day
+                </Label>
+              </div>
               <div className="grid gap-4">
                 <Label htmlFor="notes">Notes</Label>
                 <Input
@@ -243,6 +296,35 @@ export default function Home() {
                   value={event.notes}
                   onChange={handleChange}
                 />
+              </div>
+              <div className="flex gap-2 mt-2">
+                {colours.map((colour) => (
+                  <Button
+                    name="colour"
+                    key={colour}
+                    type="button"
+                    variant="outline"
+                    // className={`h-8 w-8 border-2 hover:opacity-80]`}
+                    className={`${
+                      event.colour === colour
+                        ? "ring-2 ring-offset-2 ring-black"
+                        : ""
+                    }`}
+                    style={{
+                      width: "5px",
+                      backgroundColor: colour,
+                      borderRadius: "100%",
+                    }}
+                    onClick={() =>
+                      handleChange(({
+                        target: { name: "colour", value: colour },
+                      } as unknown) as React.ChangeEvent<HTMLInputElement>)
+                    }
+                    aria-label={colour}
+                  >
+                    {/* {colour} */}
+                  </Button>
+                ))}
               </div>
               <DialogFooter>
                 <DialogClose asChild>
@@ -288,8 +370,48 @@ export default function Home() {
             components={{
               toolbar: CustomToolbar,
             }}
+            onSelectEvent={handleSelectEvent}
+            // custom colour the events
+            eventPropGetter={(event) => {
+              const backgroundColor = event.color || "#2563eb"; // fallback blue
+              return {
+                style: {
+                  backgroundColor,
+                  color: "white",
+                  borderRadius: "8px",
+                  border: "none",
+                  padding: "2px 6px",
+                },
+              };
+            }}
           />
         </div>
+        {selectedEvent && (
+          <Popover open={modalOpen} onOpenChange={setModalOpen}>
+            <PopoverTrigger asChild>
+              <div
+                style={{
+                  position: "fixed",
+                  left: popoverPosition.x,
+                  top: popoverPosition.y,
+                  width: 1,
+                  height: 1,
+                  pointerEvents: "none",
+                }}
+              />
+            </PopoverTrigger>
+            <PopoverContent className="w-64" side="right" align="center">
+              <h3 className="font-bold text-lg">{selectedEvent.title}</h3>
+              {selectedEvent.notes && (
+                <p className="text-sm text-gray-600">{selectedEvent.notes}</p>
+              )}
+              <p className="text-xs mt-2">
+                {new Date(selectedEvent.start).toLocaleString()} -{" "}
+                {new Date(selectedEvent.end).toLocaleString()}
+              </p>
+            </PopoverContent>
+          </Popover>
+        )}
       </main>
     </div>
   );

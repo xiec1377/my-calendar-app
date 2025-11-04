@@ -40,6 +40,7 @@ export async function GET(req: Request) {
     console.log('eventss::::::', events)
 
     const dto = events.map((e) => ({
+      id: e.id,
       title: e.title,
       start: e.startTime.toISOString(), 
       end: new Date(e.endTime).toISOString(), 
