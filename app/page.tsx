@@ -151,21 +151,25 @@ export default function Home() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    // console.log("name:", name, "value:", value);
+    const { name, type, value, checked } = e.target;
+    // console.log("name:", name, "value:", type === "checkbox" ? checked : value);
+
     setEvent((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleCancel = () => {
     setEvent({
       title: "",
+      startDate: "",
       start: "",
+      endDate: "",
       end: "",
       notes: "",
       color: "",
+      isAllDay: false,
     });
   };
 
@@ -189,6 +193,7 @@ export default function Home() {
           end: combineDateAndTimeUTC(event?.endDate, event?.end),
           notes: event?.notes,
           color: event?.color,
+          isAllDay: event?.isAllDay || false,
         }),
       });
 
@@ -272,7 +277,10 @@ export default function Home() {
           <form>
             <DialogTrigger asChild>
               {/* <Button variant="outline">Open Dialog</Button> */}
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                onClick={handleCancel}
+              >
                 + Create
               </button>
             </DialogTrigger>
@@ -333,9 +341,16 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Input type="checkbox" id="notify" className="h-4 w-4" />
+                <Input
+                  type="checkbox"
+                  id="isAllDay"
+                  name="isAllDay"
+                  checked={event.isAllDay || false}
+                  onChange={handleChange}
+                  className="h-4 w-4 cursor-pointer accent-blue-600"
+                />
                 <Label
-                  htmlFor="notify"
+                  htmlFor="isAllDay"
                   className="text-sm font-medium leading-none cursor-pointer"
                 >
                   All day
@@ -524,9 +539,16 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Input type="checkbox" id="notify" className="h-4 w-4" />
+                      <Input
+                        type="checkbox"
+                        id="isAllDay"
+                        name="isAllDay"
+                        checked={event.isAllDay || false}
+                        onChange={handleChange}
+                        className="h-4 w-4 cursor-pointer accent-blue-600"
+                      />
                       <Label
-                        htmlFor="notify"
+                        htmlFor="isAllDay"
                         className="text-sm font-medium leading-none cursor-pointer"
                       >
                         All day
@@ -585,7 +607,9 @@ export default function Home() {
             {!isEditMode ? (
               <PopoverContent className="w-64" side="right" align="center">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-lg">{event.title}</h3>
+                  <h3 className="font-bold text-lg">
+                    {event.title} {event.isAllDay}{" "}
+                  </h3>
                   <div className="flex gap-2">
                     <button
                       className="text-gray-500 hover:text-blue-700"
@@ -645,7 +669,7 @@ export default function Home() {
                     </p>
                   )}
                    */}
-                   {event.startDate}
+                  {event.startDate}
                 </p>
               </PopoverContent>
             ) : (
@@ -720,9 +744,16 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Input type="checkbox" id="notify" className="h-4 w-4" />
+                  <Input
+                    type="checkbox"
+                    id="isAllDay"
+                    name="isAllDay"
+                    checked={event.isAllDay || false}
+                    onChange={handleChange}
+                    className="h-4 w-4 cursor-pointer accent-blue-600"
+                  />
                   <Label
-                    htmlFor="notify"
+                    htmlFor="isAllDay"
                     className="text-sm font-medium leading-none cursor-pointer"
                   >
                     All day

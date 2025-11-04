@@ -45,6 +45,7 @@ export async function GET(
     //   : '',
     notes: event.notes || '',
     color: event.color || 'blue',
+    isAllDay: event.isAllDay || false,
   }
 
   console.log('startdate:', dto.startDate, 'start:', dto.start)
@@ -79,6 +80,7 @@ export async function PATCH(
         endTime: endTime ? new Date(endTime) : existingEvent.endTime,
         notes: notes ?? existingEvent.notes,
         color: color ?? existingEvent.color,
+        isAllDay: body.isAllDay ?? existingEvent.isAllDay,
       },
     })
 
