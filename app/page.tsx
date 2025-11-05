@@ -24,7 +24,7 @@ import { format } from "date-fns";
 // radix
 
 import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
+// import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
 
@@ -32,6 +32,42 @@ import { combineDateAndTimeUTC } from "@/lib/dateUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
 
+import moment from "moment-timezone";
+
+const CustomTimeGutterHeader = () => {
+  // const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // const tzAbbr = moment.tz(tz).format("z");
+
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const offsetHours = moment.tz(tz).utcOffset() / 60; // offset in hours
+  const sign = offsetHours >= 0 ? "+" : "";
+  const tzAbbr = `GMT${sign}${offsetHours}`;
+  return (
+    <div
+      className="rbc-time-gutter-header text-xs text-gray-600 flex items-center justify-center"
+      style={{ width: "100%", height: "100%" }}
+    >
+      {tzAbbr}
+    </div>
+  );
+};
+
+const CustomHeader = ({ label }) => {
+  // Split label like "Sat 15" into ["Sat", "15"]
+  const [day, date] = label.split(" ");
+
+  return (
+   <div
+      className="flex flex-col items-center justify-center h-[40px] leading-none"
+      style={{
+        lineHeight: '1.1',
+      }}>
+      {/* <span className="text-xs text-gray-600">{day}</span> */}
+      <span>{day}</span>
+      <span className="text-lg font-bold">{date}</span>
+    </div>
+  );
+};
 const CustomToolbar = ({ label, onNavigate, onView }) => {
   return (
     <div className="rbc-toolbar flex w-full px-4">
@@ -435,6 +471,10 @@ export default function Home() {
             formats={formats}
             components={{
               toolbar: CustomToolbar,
+              timeGutterHeader: CustomTimeGutterHeader,
+              week: {
+                header: CustomHeader,
+              },
             }}
             onNavigate={(date) => setDate(date)}
             onSelectEvent={handleSelectEvent}
