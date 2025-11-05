@@ -102,12 +102,14 @@ const colors: Record<string, string> = {
 // Event Form Component
 const EventForm = ({
   event,
+  setEvent,
   onChange,
   onSubmit,
   onCancel,
   isNew,
 }: {
   event: CalendarEvent;
+  setEvent: React.Dispatch<React.SetStateAction<CalendarEvent>>;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -167,14 +169,16 @@ const EventForm = ({
             onChange={handleStartChange}
             value={event.startDate}
           />
-          <Input
-            id="startTime"
-            name="startTime"
-            type="time"
-            className="flex-[1]"
-            onChange={handleStartChange}
-            value={event.startTime}
-          />{" "}
+          {!event.isAllDay && (
+            <Input
+              id="startTime"
+              name="startTime"
+              type="time"
+              className="flex-[1]"
+              onChange={handleStartChange}
+              value={event.startTime}
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-2 justify-center w-full">
@@ -192,15 +196,17 @@ const EventForm = ({
             value={event.endDate}
             min={event.startDate}
           />
-          <Input
-            id="endTime"
-            name="endTime"
-            type="time"
-            className="flex-[1]"
-            onChange={onChange}
-            value={event.endTime}
-            min={event.startTime}
-          />
+          {!event.isAllDay && (
+            <Input
+              id="endTime"
+              name="endTime"
+              type="time"
+              className="flex-[1]"
+              onChange={onChange}
+              value={event.endTime}
+              min={event.startTime}
+            />
+          )}
         </div>
 
         <div className="flex items-end gap-2">
@@ -210,7 +216,18 @@ const EventForm = ({
             id="isAllDay"
             name="isAllDay"
             checked={event.isAllDay || false}
-            onChange={onChange}
+            // onChange={onChange}
+            onChange={(e) => {
+              const { name, type, checked, value } = e.target;
+              setEvent((prev) => ({
+                ...prev,
+                [name]: type === "checkbox" ? checked : value,
+                startTime:
+                  name === "isAllDay" && checked ? "00:00" : prev.startTime,
+                endTime:
+                  name === "isAllDay" && checked ? "23:59" : prev.endTime,
+              }));
+            }}
             className="h-4 w-4 cursor-pointer accent-blue-600"
           />
           <Label
@@ -635,6 +652,7 @@ export default function Home() {
             ) : (
               <EventForm
                 event={event}
+                setEvent={setEvent}
                 onChange={handleChange}
                 onSubmit={handleSubmit}
                 onCancel={() => {
