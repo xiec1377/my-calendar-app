@@ -484,8 +484,8 @@ export default function Home() {
       const data = await res.json();
       console.log("Deleted:", data);
 
-      // Refresh events
-      await fetchEvents();
+      // await fetchEvents();
+      setEvents((prev) => prev.filter((e) => e.id !== event.id));
       setModalOpen(false);
       setDeleteModalOpen(false);
     } catch (error) {
