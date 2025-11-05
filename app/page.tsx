@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { endOfDay, format } from "date-fns";
+import { endOfDay, format, parseISO } from "date-fns";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
@@ -32,10 +32,54 @@ import {
   BsArrowDown,
   BsTrash,
   BsPencil,
+  BsPencilFill,
+  BsFillTrashFill,
 } from "react-icons/bs";
+import { MdClose } from "react-icons/md";
 import moment from "moment-timezone";
 
+const formatEventTime = (start: Date, end: Date) => {
+  const format = (date: Date) => moment(date).format("h A"); // only hours + AM/PM
+  return `${format(start)} - ${format(end)}`;
+};
+
+const CustomerEventWrapper = ({ event, children }: any) => {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      title={`${moment(event.start).format("h:mm A")} - ${moment(
+        event.end
+      ).format("h:mm A")}: ${event.title}`}
+      style={{
+        backgroundColor: event.color || "#FACD15", // fallback color
+        color: "white",
+        borderRadius: "8px",
+        border: "none",
+        padding: "2px 6px",
+        cursor: "pointer",
+      }}
+    >
+      {children}
+    </div>
+  );
+};
 // Components
+const CustomEvent = ({ event }: any) => {
+  const startTime =
+    event.start instanceof Date
+      ? event.start.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
+  const endTime =
+    event.end instanceof Date
+      ? event.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "";
+
+  return <div className="font-bold">{event.title}</div>;
+};
 const CustomTimeGutterHeader = () => {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const offsetHours = moment.tz(tz).utcOffset() / 60;
@@ -146,6 +190,14 @@ const EventForm = ({
       side="right"
       align="center"
     >
+      <div className="flex justify-end w-full">
+        <button
+          className="text-gray-500 hover:text-blue-700"
+          onClick={onCancel}
+        >
+          <MdClose className="text-gray-500" size={20} />
+        </button>
+      </div>
       <div className="flex items-center gap-2 justify-center w-full">
         <RiFontSize className="text-gray-500" size={20} />
         <Input
@@ -232,7 +284,7 @@ const EventForm = ({
           />
           <Label
             htmlFor="isAllDay"
-            className="text-sm font-medium leading-none cursor-pointer"
+            className="text-sm font-normal leading-none cursor-pointer"
           >
             All day
           </Label>
@@ -289,7 +341,6 @@ export default function Home() {
   const [event, setEvent] = useState<CalendarEvent>({});
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
@@ -299,7 +350,7 @@ export default function Home() {
     dateFormat: "D",
     dayFormat: "ddd D",
     monthHeaderFormat: "MMMM YYYY",
-    timeGutterFormat: "h a",
+    timeGutterFormat: "h A",
     dayRangeHeaderFormat: ({ start }: { start: Date }) =>
       format(start, "MMMM yyyy"),
     dayHeaderFormat: (date: Date) => format(date, "MMMM d, yyyy"),
@@ -529,7 +580,6 @@ export default function Home() {
       // await fetchEvents();
       setEvents((prev) => prev.filter((e) => e.id !== event.id));
       setModalOpen(false);
-      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error:", error);
     }
@@ -538,20 +588,19 @@ export default function Home() {
   return (
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <div className="flex h-full flex-col gap-4 p-8">
-        <button
+        <Button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleCreateEvent}
         >
           + Create
-        </button>
-
+        </Button>
         <SmallCalendar
           mode="single"
           selected={date}
           onSelect={setDate}
           className="rounded-md border shadow-sm"
           captionLayout="dropdown"
-        />
+        />{" "}
       </div>
 
       <main className="flex w-full flex-row items-center justify-between bg-white dark:bg-black sm:items-start">
@@ -569,6 +618,8 @@ export default function Home() {
               toolbar: CustomToolbar,
               timeGutterHeader: CustomTimeGutterHeader,
               week: { header: CustomHeader },
+              event: CustomEvent,
+              // eventWrapper: CustomerEventWrapper,
             }}
             onNavigate={(date) => setDate(date)}
             onSelectEvent={handleSelectEvent}
@@ -608,21 +659,41 @@ export default function Home() {
               />
             </PopoverTrigger>
 
-            {!isEditMode && !isNewEvent ? (
-              <PopoverContent className="w-64" side="right" align="center">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-lg">{event.title}</h3>
+            {!isEditMode && !isNewEvent && event && event.id ? (
+              <PopoverContent
+                className="w-full"
+                // className="w-64 border-t-8 border-t-red-500 border-b-0 border-l-0 border-r-0 w-full"
+                // className="w-64 border-l-8 border-l-red-500 border-t-0 border-r-0 border-b-0"
+                side="right"
+                align="center"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div
+                    className="w-4 h-4 rounded-sm"
+                    style={{
+                      backgroundColor: event.color,
+                      width: "20px",
+                      height: "20px",
+                    }}
+                  ></div>
+                  <h3 className="font-bold text-lg flex-1 text-left">
+                    {event.title}
+                  </h3>
+
                   <div className="flex gap-2">
                     <button
                       className="text-gray-500 hover:text-blue-700"
                       onClick={() => setIsEditMode(true)}
                     >
-                      <BsPencil className="text-gray-500" size={20} />
+                      <BsPencilFill className="text-gray-500" size={20} />
                     </button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <button className="text-gray-500 hover:text-red-700">
-                          <BsTrash className="text-gray-500" size={20} />
+                          <BsFillTrashFill
+                            className="text-gray-500"
+                            size={20}
+                          />
                         </button>
                       </DialogTrigger>
                       <DialogContent className="max-w-md">
@@ -639,14 +710,25 @@ export default function Home() {
                     </Dialog>
                   </div>
                 </div>
+                <div className="flex flex-row gap-2 w-full">
+                  {event.start && (
+                    <p className="text-sm text-gray-600">
+                      {event.isAllDay
+                        ? format(event.start, "MMMM d")
+                        : format(event.start, "MMMM d, yyyy, h:mm a")}{" "}
+                    </p>
+                  )}
+                  {event.end && (
+                    <p className="text-sm text-gray-600">
+                      {" – "}
+                      {event.isAllDay
+                        ? format(event.end, "MMMM d")
+                        : format(event.start, "MMMM d, yyyy, h:mm a")}{" "}
+                    </p>
+                  )}
+                </div>
                 {event.notes && (
                   <p className="text-sm text-gray-600">{event.notes}</p>
-                )}
-                {event.startDate && (
-                  <p className="text-sm text-gray-600">{event.startDate}</p>
-                )}
-                {event.endDate && (
-                  <p className="text-sm text-gray-600">{event.endDate}</p>
                 )}
               </PopoverContent>
             ) : (
