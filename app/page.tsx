@@ -272,7 +272,6 @@ export default function Home() {
     // max-w-3xl
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <div className="flex h-full flex-col gap-4 p-8">
-        {/* <Button variant="outline">+ Create</Button> */}
         <Dialog>
           <form>
             <DialogTrigger asChild>
@@ -437,6 +436,7 @@ export default function Home() {
             components={{
               toolbar: CustomToolbar,
             }}
+            onNavigate={(date) => setDate(date)}
             onSelectEvent={handleSelectEvent}
             // custom color the events
             eventPropGetter={(event) => {
@@ -474,137 +474,6 @@ export default function Home() {
                 }}
               />
             </PopoverTrigger>
-            {deleteModalOpen && (
-              <Dialog>
-                <form>
-                  <DialogTrigger asChild>
-                    {/* <Button variant="outline">Open Dialog</Button> */}
-                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                      + Create
-                    </button>
-                  </DialogTrigger>
-                  {/* sm:max-w-[425px] */}
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>New Event</DialogTitle>
-                      <DialogDescription>Schedule an event.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4">
-                      <Label htmlFor="event-name">Event Name</Label>
-                      <Input
-                        id="title"
-                        name="title"
-                        placeholder="Design machines"
-                        value={event.title}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="grid gap-4">
-                      <Label htmlFor="date">Start</Label>
-                      <div className="flex flex-row gap-2">
-                        <Input
-                          id="startDate"
-                          name="startDate"
-                          type="date"
-                          className="flex-[2]"
-                          onChange={handleChange}
-                          value={event.startDate as string}
-                        ></Input>
-                        <Input
-                          id="start"
-                          name="start"
-                          type="time"
-                          className="flex-[1]"
-                          onChange={handleChange}
-                          value={event.start as string}
-                        ></Input>
-                      </div>
-                      <Label htmlFor="date">End</Label>
-                      <div className="flex flex-row gap-2">
-                        <Input
-                          id="endDate"
-                          name="endDate"
-                          type="date"
-                          className="flex-[2]"
-                          onChange={handleChange}
-                          value={event.endDate as string}
-                        ></Input>
-                        <Input
-                          id="end"
-                          name="end"
-                          type="time"
-                          className="flex-[1]"
-                          onChange={handleChange}
-                          value={event.end as string}
-                        ></Input>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="checkbox"
-                        id="isAllDay"
-                        name="isAllDay"
-                        checked={event.isAllDay || false}
-                        onChange={handleChange}
-                        className="h-4 w-4 cursor-pointer accent-blue-600"
-                      />
-                      <Label
-                        htmlFor="isAllDay"
-                        className="text-sm font-medium leading-none cursor-pointer"
-                      >
-                        All day
-                      </Label>
-                    </div>
-                    <div className="grid gap-4">
-                      <Label htmlFor="notes">Notes</Label>
-                      <Input
-                        id="notes"
-                        name="notes"
-                        placeholder="Add notes here..."
-                        value={event.notes}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      {Object.entries(colors).map(([name, hex]) => (
-                        <Button
-                          key={name}
-                          name="color"
-                          type="button"
-                          variant="outline"
-                          className={`h-8 w-8 p-0 border-2 ${
-                            event.color === name
-                              ? "ring-2 ring-offset-2 ring-black"
-                              : ""
-                          }`}
-                          style={{
-                            backgroundColor: hex,
-                            borderRadius: "50%",
-                            cursor: "pointer",
-                          }}
-                          onClick={() =>
-                            handleChange(({
-                              target: { name: "color", value: name },
-                            } as unknown) as React.ChangeEvent<HTMLInputElement>)
-                          }
-                          aria-label={name}
-                        />
-                      ))}
-                    </div>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline" onClick={handleCancel}>
-                          Cancel
-                        </Button>
-                      </DialogClose>
-                      <Button type="submit" onClick={handleSubmitEvent}>
-                        Save
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </form>
-              </Dialog>
-            )}
             {!isEditMode ? (
               <PopoverContent className="w-64" side="right" align="center">
                 <div className="flex items-center justify-between">
