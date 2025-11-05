@@ -113,6 +113,31 @@ const EventForm = ({
   onCancel: () => void;
   isNew: boolean;
 }) => {
+  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onChange(e); // propagate change to parent state
+
+    if (name === "startDate" || name === "startTime") {
+      const startDate = name === "startDate" ? value : event.startDate;
+      const startTime = name === "startTime" ? value : event.startTime;
+
+      if (startDate && startTime) {
+        const start = new Date(`${startDate}T${startTime}`);
+        const newEnd = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour later
+
+        const endDate = newEnd.toISOString().split("T")[0];
+        const endTime = newEnd.toTimeString().slice(0, 5);
+
+        // update endDate and endTime automatically
+        onChange({
+          target: { name: "endDate", value: endDate },
+        } as any);
+        onChange({
+          target: { name: "endTime", value: endTime },
+        } as any);
+      }
+    }
+  };
   return (
     <PopoverContent
       className="w-full flex flex-col gap-y-4"
@@ -139,7 +164,7 @@ const EventForm = ({
             name="startDate"
             type="date"
             className="flex-[2]"
-            onChange={onChange}
+            onChange={handleStartChange}
             value={event.startDate}
           />
           <Input
@@ -147,15 +172,13 @@ const EventForm = ({
             name="startTime"
             type="time"
             className="flex-[1]"
-            onChange={onChange}
+            onChange={handleStartChange}
             value={event.startTime}
           />{" "}
         </div>
 
         <div className="flex items-center gap-2 justify-center w-full">
-          <span className="text-gray-400 text-[20px] w-5 h-5 flex items-center justify-center">
-            ↓
-          </span>
+          <BsArrowDown className="text-gray-500" size={20} />
         </div>
 
         <div className="flex items-center gap-2 justify-center w-full">
@@ -167,6 +190,7 @@ const EventForm = ({
             className="flex-[2]"
             onChange={onChange}
             value={event.endDate}
+            min={event.startDate}
           />
           <Input
             id="endTime"
@@ -175,6 +199,7 @@ const EventForm = ({
             className="flex-[1]"
             onChange={onChange}
             value={event.endTime}
+            min={event.startTime}
           />
         </div>
 
