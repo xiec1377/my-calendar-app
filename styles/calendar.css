@@ -123,3 +123,22 @@
 .rbc-off-range-bg {
   background-color: unset !important;
 }
+
+.rbc-time-gutter .rbc-label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  margin: 0;
+  padding-right: 4px;
+  transform: translateY(-50%);
+}
+
+.rbc-time-gutter .rbc-timeslot-group {
+  border-top: none !important;  
+  border-bottom: none !important;
+}
+
+.rbc-time-content > *:not(.rbc-time-gutter) .rbc-timeslot-group {
+  border-top: 1px solid #ddd;
+}

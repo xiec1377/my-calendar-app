@@ -57,11 +57,12 @@ const CustomHeader = ({ label }) => {
   const [day, date] = label.split(" ");
 
   return (
-   <div
+    <div
       className="flex flex-col items-center justify-center h-[40px] leading-none"
       style={{
-        lineHeight: '1.1',
-      }}>
+        lineHeight: "1.1",
+      }}
+    >
       {/* <span className="text-xs text-gray-600">{day}</span> */}
       <span>{day}</span>
       <span className="text-lg font-bold">{date}</span>
@@ -154,6 +155,12 @@ export default function Home() {
     dateFormat: "D", // Single digit day (1, 2, 3... instead of 01, 02, 03)
     dayFormat: "ddd D", // Mon 1, Tue 2, etc.
     monthHeaderFormat: "MMMM YYYY", // November 2025
+    timeGutterFormat: "h a", // 1 am
+    dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
+      format(start, "MMMM yyyy"), // Show only month and year
+    // dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
+    // `${format(start, "MMMM d")} – ${format(end, "MMMM d, yyyy")}`,
+    dayHeaderFormat: (date: Date) => format(date, "MMMM d, yyyy"),
   };
 
   useEffect(() => {
