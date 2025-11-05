@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 
 import { startOfDay, endOfDay, parseISO } from 'date-fns'
 import { is } from 'date-fns/locale'
+import { combineDateAndTimeUTC } from "@/lib/dateUtils";
 
 // GET: Return all events (optional, for testing)
 export async function GET(req: Request) {
@@ -65,22 +66,31 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     console.log('body---', body)
-    const { title, start, end, notes, color, isAllDay } = body
+    const {
+      title,
+      startDate,
+      start,
+      endDate,
+      end,
+      notes,
+      color,
+      isAllDay,
+    } = body
 
     // if (!title || !start || !end) {y
     //   return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     // }
 
     console.log('current time:', new Date())
-    console.log('start:', start, new Date(start))
-    console.log('end:', end)
-    console.log("isAllDay:", isAllDay)
+    console.log('start:', start, combineDateAndTimeUTC(startDate, start))
+    console.log('end:', end, combineDateAndTimeUTC(endDate, end))
+    console.log('isAllDay:', isAllDay)
 
     const newEvent = await prisma.calendarEvent.create({
       data: {
         title: title,
-        startTime: start,
-        endTime: end,
+        startTime: combineDateAndTimeUTC(startDate, start),
+        endTime: combineDateAndTimeUTC(endDate, end),
         notes: notes || '',
         color: color || 'blue',
         isAllDay: isAllDay || false,

@@ -23,12 +23,10 @@ export async function GET(
   const dto = {
     id: event.id,
     title: event.title,
-    startDate: event.startTime ? event.startTime : '', // send ISO string
     // startDate: event.startTime
     //   ? event.startTime.toISOString().split('T')[0]
     //   : '',
     start: event.startTime ? event.startTime : '',
-    endDate: event.endTime ? event.endTime : '',
     end: event.endTime ? event.endTime : '',
 
     // startDate: event.startTime
@@ -50,7 +48,7 @@ export async function GET(
 
   console.log('startdate:', dto.startDate, 'start:', dto.start)
 
-  return NextResponse.json({ dto })
+  return NextResponse.json({ event: dto })
 }
 
 export async function PATCH(

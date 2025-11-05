@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
+import { endOfDay, format } from "date-fns";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
@@ -82,8 +82,10 @@ type CalendarEvent = {
   isAllDay?: boolean;
   startDate?: string;
   endDate?: string;
-  start: string;
-  end: string;
+  startTime?: string;
+  endTime?: string;
+  start: string | Date;
+  end: string | Date;
   notes?: string;
   color?: string;
 };
@@ -138,24 +140,16 @@ const EventForm = ({
             type="date"
             className="flex-[2]"
             onChange={onChange}
-            value={
-              event.startDate
-                ? new Date(event.startDate).toISOString().split("T")[0]
-                : ""
-            }
+            value={event.startDate}
           />
           <Input
-            id="start"
-            name="start"
+            id="startTime"
+            name="startTime"
             type="time"
             className="flex-[1]"
             onChange={onChange}
-            value={
-              event.start
-                ? new Date(event.start).toTimeString().slice(0, 5)
-                : ""
-            }
-          />
+            value={event.startTime}
+          />{" "}
         </div>
 
         <div className="flex items-center gap-2 justify-center w-full">
@@ -172,21 +166,15 @@ const EventForm = ({
             type="date"
             className="flex-[2]"
             onChange={onChange}
-            value={
-              event.endDate
-                ? new Date(event.endDate).toISOString().split("T")[0]
-                : ""
-            }
+            value={event.endDate}
           />
           <Input
-            id="end"
-            name="end"
+            id="endTime"
+            name="endTime"
             type="time"
             className="flex-[1]"
             onChange={onChange}
-            value={
-              event.end ? new Date(event.end).toTimeString().slice(0, 5) : ""
-            }
+            value={event.endTime}
           />
         </div>
 
@@ -256,12 +244,7 @@ const EventForm = ({
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [event, setEvent] = useState<CalendarEvent>({
-    title: "",
-    start: "",
-    end: "",
-    notes: "",
-  });
+  const [event, setEvent] = useState<CalendarEvent>({});
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -310,16 +293,27 @@ export default function Home() {
     fetchEvents();
   }, []);
 
+  // useEffect(() => {
+  //   fetchEvents().then((fetched) =>
+  //     setEvents((prev) => {
+  //       const ids = new Set(fetched.map((e) => e.id));
+  //       return [...fetched, ...prev.filter((e) => !ids.has(e.id))];
+  //     })
+  //   );
+  // }, [date]);
+
   const handleCreateEvent = () => {
     const now = new Date();
+    console.log("now:", now);
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-
     setEvent({
       title: "",
       startDate: now.toISOString().split("T")[0],
-      start: now.toISOString(),
+      start: now,
+      startTime: now.toTimeString().slice(0, 5),
+      end: oneHourLater,
       endDate: oneHourLater.toISOString().split("T")[0],
-      end: oneHourLater.toISOString(),
+      endTime: oneHourLater.toTimeString().slice(0, 5),
       notes: "",
       color: "blue",
       isAllDay: false,
@@ -349,7 +343,20 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      setEvent(data.dto);
+      console.log("Data:", data);
+      console.log("fetched events", data.event);
+      const e = data.event;
+      const selectedEvent: CalendarEvent = {
+        ...e,
+        start: new Date(e.start),
+        startTime: new Date(e.start).toTimeString().slice(0, 5),
+        startDate: new Date(e.start).toISOString().split("T")[0],
+        end: new Date(e.end),
+        endTime: new Date(e.end).toTimeString().slice(0, 5),
+        endDate: new Date(e.end).toISOString().split("T")[0],
+      };
+      console.log("selectedEvent:", selectedEvent);
+      setEvent(selectedEvent);
     } catch (error) {
       console.error("Error fetching event:", error);
     }
@@ -375,8 +382,10 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: event?.title || "Untitled",
-          start: combineDateAndTimeUTC(event?.startDate, event?.start),
-          end: combineDateAndTimeUTC(event?.endDate, event?.end),
+          startDate: event?.startDate,
+          start: event.startTime, //combineDateAndTimeUTC(event?.startDate, event?.start),
+          endDate: event?.endDate,
+          end: event.endTime, // combineDateAndTimeUTC(event?.endDate, event?.end),
           notes: event?.notes,
           color: event?.color,
           isAllDay: event?.isAllDay || false,
@@ -384,10 +393,46 @@ export default function Home() {
       });
 
       const data = await res.json();
-      console.log(isNewEvent ? "Created:" : "Updated:", data);
+      console.log(isNewEvent ? "Created:" : "Updated:", data.event);
+
+      // const updatedEvents = [...events, data.event]; // create a new array
+      // setEvents((prev) => [...prev, data.event]);
+
+      // setEvents((prev) => [...prev.map(e => ({ ...e })), data.event]);
+      const apiEvents = [
+        {
+          id: 3,
+          title: "Project Deadline",
+          start: new Date(2025, 9, 5, 9, 0), // October 5, 2025, 9:00 AM
+          end: new Date(2025, 9, 5, 9, 30),
+          color: "red",
+        },
+      ];
+      const e = data.event;
+      const newEvent: CalendarEvent = {
+        ...e,
+        start: new Date(e.startTime),
+        startTime: new Date(e.startTime).toTimeString().slice(0, 5),
+        startDate: new Date(e.startTime).toISOString().split("T")[0],
+        end: new Date(e.endTime),
+        endTime: new Date(e.endTime).toTimeString().slice(0, 5),
+        endDate: new Date(e.endTime).toISOString().split("T")[0],
+      };
+
+      setEvents((prev) => [...prev, newEvent]);
+
+      // const newEvents = apiEvents.map((e: any) => ({
+      //   ...e,
+      //   start: new Date(e.start),
+      //   end: new Date(e.end),
+      // }));
+      // setEvents(newEvents);
+
+      console.log("new events:", events);
+      // setEvents(updatedEvents);
 
       // Refresh events
-      await fetchEvents();
+      // await fetchEvents();
 
       // Add new event to calendar immediately
       // if (isNewEvent) {
@@ -555,7 +600,12 @@ export default function Home() {
                 {event.notes && (
                   <p className="text-sm text-gray-600">{event.notes}</p>
                 )}
-                <p className="text-xs mt-2">{event.startDate}</p>
+                {event.startDate && (
+                  <p className="text-sm text-gray-600">{event.startDate}</p>
+                )}
+                {event.endDate && (
+                  <p className="text-sm text-gray-600">{event.endDate}</p>
+                )}
               </PopoverContent>
             ) : (
               <EventForm
