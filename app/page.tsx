@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
@@ -30,7 +31,20 @@ import "../styles/calendar.css";
 
 import { combineDateAndTimeUTC } from "@/lib/dateUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPen,
+  faTrash,
+  faClock,
+  faHeading,
+  faFont,
+  faNoteSticky,
+  faFileLines,
+} from "@fortawesome/free-solid-svg-icons";
+import { RiFontSize } from "react-icons/ri";
+// import { FaRegClock } from "react-icons/fa";
+import { BsTextLeft } from "react-icons/bs";
+import { BsClock } from "react-icons/bs";
+import { BsArrowDown } from "react-icons/bs";
 
 import moment from "moment-timezone";
 
@@ -590,9 +604,13 @@ export default function Home() {
                 </p>
               </PopoverContent>
             ) : (
-              <PopoverContent className="w-full" side="right" align="center">
-                <div className="grid gap-4">
-                  <Label htmlFor="event-name">Event Name</Label>
+              <PopoverContent
+                className="w-full flex flex-col gap-y-4"
+                side="right"
+                align="center"
+              >
+                <div className="flex items-center gap-2 justify-center w-full">
+                  <RiFontSize className="text-gray-500" size={20} />
                   <Input
                     id="title"
                     name="title"
@@ -601,9 +619,9 @@ export default function Home() {
                     onChange={handleChange}
                   />
                 </div>
-                <div className="grid gap-4">
-                  <Label htmlFor="date">Start</Label>
-                  <div className="flex flex-row gap-2">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 justify-center w-full">
+                    <BsClock className="text-gray-500" size={20} />
                     <Input
                       id="startDate"
                       name="startDate"
@@ -617,8 +635,7 @@ export default function Home() {
                               .split("T")[0]
                           : ""
                       }
-                      // value={new Date(event.start).toISOString().split("T")[0]}
-                    ></Input>
+                    />
                     <Input
                       id="start"
                       name="start"
@@ -632,58 +649,90 @@ export default function Home() {
                       }
                     ></Input>
                   </div>
-                  <Label htmlFor="date">End</Label>
-                  <div className="flex flex-row gap-2">
+                  <div className="flex items-center gap-2 justify-center w-full">
+                    <span
+                      style={{
+                        fontSize: "20px",
+                        width: "20px",
+                        height: "20px",
+                        textAlign: "center",
+                      }}
+                    />
+                    <BsArrowDown className="text-gray-500" size={20} />
+                  </div>
+                  <div className="flex items-center gap-2 justify-center w-full">
+                    <span
+                      style={{
+                        fontSize: "20px",
+                        width: "20px",
+                        height: "20px",
+                        textAlign: "center",
+                      }}
+                    />
+                    <div className="flex flex-row gap-2">
+                      <Input
+                        id="endDate"
+                        name="endDate"
+                        type="date"
+                        className="flex-[2]"
+                        onChange={handleChange}
+                        value={
+                          event.endDate
+                            ? new Date(event.endDate)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                      ></Input>
+                      <Input
+                        id="end"
+                        name="end"
+                        type="time"
+                        className="flex-[1]"
+                        onChange={handleChange}
+                        value={
+                          event.end
+                            ? new Date(event.end).toTimeString().slice(0, 5)
+                            : ""
+                        }
+                      ></Input>
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <span
+                      style={{
+                        fontSize: "20px",
+                        width: "20px",
+                        height: "20px",
+                        textAlign: "center",
+                      }}
+                    />
                     <Input
-                      id="endDate"
-                      name="endDate"
-                      type="date"
-                      className="flex-[2]"
+                      type="checkbox"
+                      id="isAllDay"
+                      name="isAllDay"
+                      checked={event.isAllDay || false}
                       onChange={handleChange}
-                      value={
-                        event.endDate
-                          ? new Date(event.endDate).toISOString().split("T")[0]
-                          : ""
-                      }
-                    ></Input>
-                    <Input
-                      id="end"
-                      name="end"
-                      type="time"
-                      className="flex-[1]"
-                      onChange={handleChange}
-                      value={
-                        event.end
-                          ? new Date(event.end).toTimeString().slice(0, 5)
-                          : ""
-                      }
-                    ></Input>
+                      className="h-4 w-4 cursor-pointer accent-blue-600"
+                    />
+                    <Label
+                      htmlFor="isAllDay"
+                      className="text-sm font-medium leading-none cursor-pointer"
+                    >
+                      All day
+                    </Label>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="checkbox"
-                    id="isAllDay"
-                    name="isAllDay"
-                    checked={event.isAllDay || false}
-                    onChange={handleChange}
-                    className="h-4 w-4 cursor-pointer accent-blue-600"
-                  />
-                  <Label
-                    htmlFor="isAllDay"
-                    className="text-sm font-medium leading-none cursor-pointer"
-                  >
-                    All day
-                  </Label>
-                </div>
-                <div className="grid gap-4">
-                  <Label htmlFor="notes">Notes</Label>
+
+                <div className="flex items-center gap-2 justify-center w-full">
+                  <BsTextLeft className="text-gray-500" size={20} />
                   <Input
                     id="notes"
                     name="notes"
                     placeholder="Add notes here..."
                     value={event.notes}
                     onChange={handleChange}
+                    // className="w-full min-h-[80px] max-h-[200px] resize-y p-2"
                   />
                 </div>
                 <div className="flex gap-2 mt-2">
@@ -712,12 +761,17 @@ export default function Home() {
                     />
                   ))}
                 </div>
-                <Button variant="outline" onClick={() => setIsEditMode(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" onClick={handleUpdateEvent}>
-                  Save
-                </Button>
+                <div className="flex flex-row justify-end w-full gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditMode(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" onClick={handleUpdateEvent}>
+                    Save
+                  </Button>
+                </div>
               </PopoverContent>
             )}{" "}
           </Popover>

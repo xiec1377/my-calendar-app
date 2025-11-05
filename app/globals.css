@@ -121,12 +121,19 @@
   }
 }
 
-
-Button, Input[type="checkbox"] {
+button,
+input[type="checkbox"] {
   cursor: pointer;
 }
 
-Input {
-  cursor: text
+input {
+  cursor: text;
 }
 
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  /* display: none;
+  -webkit-appearance: none;
+  cursor: pointer;  */
+  filter: invert(100%) brightness(200%);
+}
