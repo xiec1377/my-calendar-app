@@ -1,22 +1,8 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { Calendar as SmallCalendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { PopoverContent } from "@/components/ui/popover";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
 import { RiFontSize } from "react-icons/ri";
@@ -43,7 +29,7 @@ const EventForm = ({
 }) => {
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    onChange(e); // propagate change to parent state
+    onChange(e);
 
     if (name === "startDate" || name === "startTime") {
       const startDate = name === "startDate" ? value : event.startDate;
@@ -55,8 +41,6 @@ const EventForm = ({
 
         const endDate = newEnd.toISOString().split("T")[0];
         const endTime = newEnd.toTimeString().slice(0, 5);
-
-        // update endDate and endTime automatically
         onChange({
           target: { name: "endDate", value: endDate },
         } as any);
@@ -101,6 +85,7 @@ const EventForm = ({
             type="date"
             className="flex-[1]"
             value={event.startDate}
+            onChange={handleStartChange}
           />
           {!event.isAllDay && (
             <Input

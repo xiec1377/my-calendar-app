@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -455,6 +456,7 @@ const BigCalendar = () => {
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
+                      <DialogTitle />
                       <h3 className="text-center">
                         Are you sure you want to delete this event?
                       </h3>

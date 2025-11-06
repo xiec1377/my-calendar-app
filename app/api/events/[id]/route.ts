@@ -8,9 +8,9 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params
-  console.log('id in get one:', id)
+//   console.log('id in get one:', id)
   const event = await prisma.calendarEvent.findUnique({ where: { id } })
-  console.log('event in get one:,', event)
+//   console.log('event in get one:,', event)
   if (!event)
     return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
@@ -24,7 +24,7 @@ export async function GET(
     isAllDay: event.isAllDay || false,
   }
 
-  console.log('startdate:', dto.startDate, 'start:', dto.start)
+//   console.log('startdate:', dto.startDate, 'start:', dto.start)
 
   return NextResponse.json({ event: dto })
 }
