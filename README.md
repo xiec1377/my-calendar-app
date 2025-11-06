@@ -9,4 +9,4 @@ To regenerate Prisma client for database:
 ```npx prisma dev```
 
 To open local Prisma web server to view database:
-``npx prisma studio```
+```npx prisma studio```
