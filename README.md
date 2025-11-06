@@ -18,3 +18,6 @@ To open local Prisma web server to view database:
 ```
 npx prisma studio
 ```
+
+<img width="1490" height="653" alt="image" src="https://github.com/user-attachments/assets/647b0f76-f050-4dd2-b3b1-17301e38bc2f" />
+
