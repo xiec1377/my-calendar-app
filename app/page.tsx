@@ -103,13 +103,47 @@ const CustomHeader = ({ label }: { label: string }) => {
 };
 
 const CustomToolbar = ({ label, onNavigate, onView }: any) => {
+  // const buttonClasses =
+  //   "px-2 py-1 bg-transparent border-0 text-sm cursor-pointer focus:outline-none";
   return (
-    <div className="rbc-toolbar flex w-full px-4">
+    <div className="rbc-toolbar flex w-full pb-4">
       <button onClick={() => onNavigate("TODAY")}>Today</button>
       <div className="rbc-btn-group">
-        <button onClick={() => onNavigate("PREV")}>{"<"}</button>
-        <span className="rbc-toolbar-label">{label}</span>
-        <button onClick={() => onNavigate("NEXT")}>{">"}</button>
+        <button id="prev-button" onClick={() => onNavigate("PREV")}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            className="lucide lucide-chevron-left size-4 rdp-chevron"
+            aria-hidden="true"
+          >
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+        </button>
+        <span className="rbc-toolbar-label text-2xl">{label}</span>
+        <button id="next-button" onClick={() => onNavigate("NEXT")}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            className="lucide lucide-chevron-right size-4 rdp-chevron"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </button>
       </div>
       <div className="rbc-btn-group flex gap-2">
         <button onClick={() => onView("day")}>Day</button>
@@ -121,7 +155,7 @@ const CustomToolbar = ({ label, onNavigate, onView }: any) => {
 };
 
 type CalendarEvent = {
-  id?: number;
+  id?: string;
   title: string;
   isAllDay?: boolean;
   startDate?: string;
@@ -141,6 +175,19 @@ const colors: Record<string, string> = {
   yellow: "#FACC15",
   purple: "#A855F7",
   orange: "#F97316",
+};
+
+const emptyEvent: CalendarEvent = {
+  title: "",
+  isAllDay: false,
+  startDate: "",
+  endDate: "",
+  startTime: "",
+  endTime: "",
+  start: "",
+  end: "",
+  notes: "",
+  color: "",
 };
 
 // Event Form Component
@@ -338,7 +385,7 @@ const EventForm = ({
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [event, setEvent] = useState<CalendarEvent>({});
+  const [event, setEvent] = useState<CalendarEvent>(emptyEvent);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
@@ -394,6 +441,10 @@ export default function Home() {
   //     })
   //   );
   // }, [date]);
+
+  const handleClearEvent = () => {
+    setEvent(emptyEvent);
+  };
 
   const handleCreateEvent = () => {
     const now = new Date();
@@ -512,7 +563,18 @@ export default function Home() {
         endDate: new Date(e.endTime).toISOString().split("T")[0],
       };
 
-      setEvents((prev) => [...prev, newEvent]);
+      // setEvents((prev) => [...prev, newEvent]);
+      setEvents((prev) => {
+        if (isNewEvent) {
+          // Add new event
+          return [...prev, newEvent];
+        } else {
+          // Update existing event by id
+          return prev.map((event) =>
+            event.id === newEvent.id ? newEvent : event
+          );
+        }
+      });
 
       // const newEvents = apiEvents.map((e: any) => ({
       //   ...e,
@@ -585,6 +647,14 @@ export default function Home() {
     }
   };
 
+  const [colorFilter, setColorFilter] = useState<string>("all");
+
+  // Filter events by color
+  const filteredEvents =
+    colorFilter === "all"
+      ? events
+      : events.filter((e) => e.color === colorFilter);
+
   return (
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <div className="flex h-full flex-col gap-4 p-8">
@@ -601,13 +671,29 @@ export default function Home() {
           className="rounded-md border shadow-sm"
           captionLayout="dropdown"
         />{" "}
+        <div className="flex items-center gap-2">
+          <label className="text-gray-700 dark:text-gray-300">
+            Filter by color:
+          </label>
+          <select
+            value={colorFilter}
+            onChange={(e) => setColorFilter(e.target.value)}
+            className="rounded border px-2 py-1 text-sm"
+          >
+            {Object.entries(colors).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <main className="flex w-full flex-row items-center justify-between bg-white dark:bg-black sm:items-start">
-        <div style={{ height: "100vh", width: "100%" }}>
+      <main className="flex w-full flex-row items-center justify-between sm:items-start">
+        <div className="pr-8 pb-8 pt-8 h-screen w-full">
           <Calendar
             localizer={localizer}
-            events={events}
+            events={filteredEvents}
             startAccessor="start"
             endAccessor="end"
             views={["month", "week", "day"]}
@@ -635,118 +721,141 @@ export default function Home() {
           />
         </div>
 
-        {event && (
-          <Popover
-            open={modalOpen}
-            onOpenChange={(isOpen) => {
-              setModalOpen(isOpen);
-              if (!isOpen) {
+        <Popover
+          open={modalOpen}
+          onOpenChange={(isOpen) => {
+            setModalOpen(isOpen);
+            if (!isOpen) {
+              setIsEditMode(false);
+              setIsNewEvent(false);
+            }
+          }}
+        >
+          <PopoverTrigger asChild>
+            <div
+              style={{
+                position: "fixed",
+                left: popoverPosition.x,
+                top: popoverPosition.y,
+                width: 1,
+                height: 1,
+                pointerEvents: "none",
+              }}
+            />
+          </PopoverTrigger>
+
+          {!isEditMode && !isNewEvent && event && event.id ? (
+            <PopoverContent
+              className="w-64"
+              // className="w-64 border-t-8 border-t-red-500 border-b-0 border-l-0 border-r-0 w-full"
+              // className="w-64 border-l-8 border-l-red-500 border-t-0 border-r-0 border-b-0"
+              side="right"
+              align="center"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div
+                  className="w-4 h-4 rounded-sm"
+                  style={{
+                    backgroundColor: colors[event.color || "blue"],
+                    width: "20px",
+                    height: "20px",
+                  }}
+                ></div>
+                <h3 className="font-bold text-lg flex-1 text-left">
+                  {event.title}
+                </h3>
+
+                <div className="flex gap-2">
+                  <button
+                    className="text-gray-500 hover:text-blue-700"
+                    onClick={() => setIsEditMode(true)}
+                  >
+                    <BsPencilFill className="text-gray-500" size={20} />
+                  </button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-gray-500 hover:text-red-700">
+                        <BsFillTrashFill className="text-gray-500" size={20} />
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <h3 className="text-center">
+                        Are you sure you want to delete this event?
+                      </h3>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button onClick={handleDeleteEvent}>Delete</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600">
+                {event.start &&
+                  (() => {
+                    const sameDay =
+                      event.start &&
+                      event.end &&
+                      format(event.start, "yyyy-MM-dd") ===
+                        format(event.end, "yyyy-MM-dd");
+
+                    if (event.isAllDay) {
+                      if (event.end && !sameDay) {
+                        return (
+                          <>
+                            {format(event.start, "MMMM d, yyyy")} –{" "}
+                            {format(event.end, "MMMM d, yyyy")}
+                          </>
+                        );
+                      }
+                      return format(event.start, "MMMM d, yyyy");
+                    }
+
+                    if (event.end) {
+                      if (sameDay) {
+                        return (
+                          <>
+                            {format(event.start, "MMMM d, yyyy")},{" "}
+                            {format(event.start, "h:mm a")} –{" "}
+                            {format(event.end, "h:mm a")}
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          {format(event.start, "MMMM d, yyyy, h:mm a")} –{" "}
+                          {format(event.end, "MMMM d, yyyy, h:mm a")}
+                        </>
+                      );
+                    }
+
+                    // fallback if only start exists
+                    return format(event.start, "MMMM d, yyyy, h:mm a");
+                  })()}
+              </p>
+
+              {event.notes && (
+                <p className="text-sm text-gray-600">{event.notes}</p>
+              )}
+            </PopoverContent>
+          ) : (
+            <EventForm
+              event={event}
+              setEvent={setEvent}
+              onChange={handleChange}
+              onSubmit={handleSubmit}
+              onCancel={() => {
                 setIsEditMode(false);
                 setIsNewEvent(false);
-              }
-            }}
-          >
-            <PopoverTrigger asChild>
-              <div
-                style={{
-                  position: "fixed",
-                  left: popoverPosition.x,
-                  top: popoverPosition.y,
-                  width: 1,
-                  height: 1,
-                  pointerEvents: "none",
-                }}
-              />
-            </PopoverTrigger>
-
-            {!isEditMode && !isNewEvent && event && event.id ? (
-              <PopoverContent
-                className="w-full"
-                // className="w-64 border-t-8 border-t-red-500 border-b-0 border-l-0 border-r-0 w-full"
-                // className="w-64 border-l-8 border-l-red-500 border-t-0 border-r-0 border-b-0"
-                side="right"
-                align="center"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div
-                    className="w-4 h-4 rounded-sm"
-                    style={{
-                      backgroundColor: event.color,
-                      width: "20px",
-                      height: "20px",
-                    }}
-                  ></div>
-                  <h3 className="font-bold text-lg flex-1 text-left">
-                    {event.title}
-                  </h3>
-
-                  <div className="flex gap-2">
-                    <button
-                      className="text-gray-500 hover:text-blue-700"
-                      onClick={() => setIsEditMode(true)}
-                    >
-                      <BsPencilFill className="text-gray-500" size={20} />
-                    </button>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button className="text-gray-500 hover:text-red-700">
-                          <BsFillTrashFill
-                            className="text-gray-500"
-                            size={20}
-                          />
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md">
-                        <h3 className="text-center">
-                          Are you sure you want to delete this event?
-                        </h3>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                          </DialogClose>
-                          <Button onClick={handleDeleteEvent}>Delete</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </div>
-                <div className="flex flex-row gap-2 w-full">
-                  {event.start && (
-                    <p className="text-sm text-gray-600">
-                      {event.isAllDay
-                        ? format(event.start, "MMMM d")
-                        : format(event.start, "MMMM d, yyyy, h:mm a")}{" "}
-                    </p>
-                  )}
-                  {event.end && (
-                    <p className="text-sm text-gray-600">
-                      {" – "}
-                      {event.isAllDay
-                        ? format(event.end, "MMMM d")
-                        : format(event.start, "MMMM d, yyyy, h:mm a")}{" "}
-                    </p>
-                  )}
-                </div>
-                {event.notes && (
-                  <p className="text-sm text-gray-600">{event.notes}</p>
-                )}
-              </PopoverContent>
-            ) : (
-              <EventForm
-                event={event}
-                setEvent={setEvent}
-                onChange={handleChange}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setIsEditMode(false);
-                  setIsNewEvent(false);
-                  if (isNewEvent) setModalOpen(false);
-                }}
-                isNew={isNewEvent}
-              />
-            )}
-          </Popover>
-        )}
+                // handleClearEvent();
+                if (isNewEvent) setModalOpen(false);
+              }}
+              isNew={isNewEvent}
+            />
+          )}
+        </Popover>
       </main>
     </div>
   );

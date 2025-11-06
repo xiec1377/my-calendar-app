@@ -4,7 +4,7 @@
 .rbc-calendar {
   /* font-family: Geist, "Geist Fallback";  */
   font-family: inherit;
-  background: white;
+  background: #f9fafb;
   border-radius: 0.5rem;
 }
 
@@ -21,7 +21,6 @@
 /* Toolbar */
 .rbc-toolbar {
   justify-content: space-between !important;
-  padding: 1rem;
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -54,7 +53,6 @@
 
 /* Events */
 .rbc-event {
-  background: #3b82f6;
   border-radius: 0.25rem;
   padding: 0.5rem 0.5rem;
   border: none;
@@ -102,6 +100,10 @@
   background: #f9fafb;
 }
 
+.rbc-time-view,
+.rbc-month-view {
+  background-color: white;
+}
 /* Week/Day view */
 .rbc-time-view {
   border: 1px solid #e5e7eb;
@@ -132,15 +134,17 @@
   margin: 0;
   padding-right: 4px;
   transform: translateY(-50%);
+  color: gray;
 }
 
 .rbc-time-gutter .rbc-timeslot-group {
   border-top: none !important;
   border-bottom: none !important;
+  border-top: 1px solid #ddd;
 }
 
 .rbc-time-content > *:not(.rbc-time-gutter) .rbc-timeslot-group {
-  border-top: 1px solid #ddd;
+  /* border-top: 1px solid #ddd; */
 }
 
 /* .rbc-date-cell.rbc-now {
@@ -160,8 +164,32 @@
   background-color: #3b82f6; 
 } */
 
-
+.rbc-time-content > .rbc-time-gutter {
+  min-width: 80px;
+}
+/* 
 .rbc-time-header-gutter {
-  justify-content: center;
-  align-items: center;
+  justify-content: center !important;
+  align-items: center !important;
+} */
+
+.rbc-timeslot-group {
+  /* border-bottom: 0.2px solid red; */
+}
+
+#prev-button,
+#next-button {
+  border: unset !important;
+  background: unset !important;
+  box-shadow: unset !important;
+  color: inherit !important;
+}
+
+#prev-button:hover,
+#next-button:hover,
+#prev-button:focus,
+#next-button:focus {
+  background: unset !important;
+  color: inherit !important;
+  box-shadow: unset !important;
 }
