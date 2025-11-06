@@ -35,8 +35,12 @@ import {
   BsPencilFill,
   BsFillTrashFill,
 } from "react-icons/bs";
+import { MdError } from "react-icons/md";
 import { MdClose } from "react-icons/md";
+import { FaCheckCircle } from "react-icons/fa";
 import moment from "moment-timezone";
+import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const formatEventTime = (start: Date, end: Date) => {
   const format = (date: Date) => moment(date).format("h A"); // only hours + AM/PM
@@ -86,7 +90,7 @@ const CustomTimeGutterHeader = () => {
   const sign = offsetHours >= 0 ? "+" : "";
   const tzAbbr = `GMT${sign}${offsetHours}`;
   return (
-    <div className="rbc-time-gutter-header text-xs text-gray-600 flex items-center justify-center">
+    <div className="rbc-time-gutter-header text-xs text-gray-600 flex items-center justify-center h-full w-full text-center">
       {tzAbbr}
     </div>
   );
@@ -264,9 +268,7 @@ const EventForm = ({
             id="startDate"
             name="startDate"
             type="date"
-            className="flex-[2]"
-            onChange={handleStartChange}
-            value={event.startDate}
+            className="flex-[1]"
           />
           {!event.isAllDay && (
             <Input
@@ -290,7 +292,7 @@ const EventForm = ({
             id="endDate"
             name="endDate"
             type="date"
-            className="flex-[2]"
+            className="flex-[1]"
             onChange={onChange}
             value={event.endDate}
             min={event.startDate}
@@ -327,11 +329,11 @@ const EventForm = ({
                   name === "isAllDay" && checked ? "23:59" : prev.endTime,
               }));
             }}
-            className="h-4 w-4 cursor-pointer accent-blue-600"
+            className="h-4 w-4 "
           />
           <Label
             htmlFor="isAllDay"
-            className="text-sm font-normal leading-none cursor-pointer"
+            className="text-sm font-normal leading-none"
           >
             All day
           </Label>
@@ -356,7 +358,7 @@ const EventForm = ({
             type="button"
             variant="outline"
             className={`h-8 w-8 p-0 border-2 ${
-              event.color === name ? "ring-2 ring-offset-2 ring-black" : ""
+              event.color === name ? "ring-2 ring-black" : ""
             }`}
             style={{
               backgroundColor: hex,
@@ -623,8 +625,27 @@ export default function Home() {
 
       setModalOpen(false);
       setIsEditMode(false);
+      toast.success(
+        `${isNewEvent ? "Created" : "Updated"} event successfully!`,
+        {
+          duration: 3000,
+          style: {
+            background: "#5fe89fff",
+            color: "#009002ff",
+          },
+          icon: <FaCheckCircle />,
+        }
+      );
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Failed to delete event...", {
+        duration: 3000,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+        },
+        icon: <MdError />,
+      });
     }
   };
 
@@ -642,8 +663,24 @@ export default function Home() {
       // await fetchEvents();
       setEvents((prev) => prev.filter((e) => e.id !== event.id));
       setModalOpen(false);
+      toast.success("Deleted event successfully!", {
+        duration: 3000,
+        style: {
+          background: "#5fe89fff",
+          color: "#009002ff",
+        },
+        icon: <FaCheckCircle />,
+      });
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Failed to delete event...", {
+        duration: 3000,
+        style: {
+          background: "#FEE2E2",
+          color: "#B91C1C",
+        },
+        icon: <MdError />,
+      });
     }
   };
 
@@ -690,7 +727,22 @@ export default function Home() {
       </div>
 
       <main className="flex w-full flex-row items-center justify-between sm:items-start">
-        <div className="pr-8 pb-8 pt-8 h-screen w-full">
+        <div className="mr-8 mt-8 mt-8 h-screen w-full">
+          <Toaster
+            position="bottom-right"
+            reverseOrder={false}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                padding: "1rem 1.25rem",
+                borderRadius: "0.5rem",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+              },
+            }}
+          />
           <Calendar
             localizer={localizer}
             events={filteredEvents}
@@ -746,36 +798,33 @@ export default function Home() {
 
           {!isEditMode && !isNewEvent && event && event.id ? (
             <PopoverContent
-              className="w-64"
-              // className="w-64 border-t-8 border-t-red-500 border-b-0 border-l-0 border-r-0 w-full"
-              // className="w-64 border-l-8 border-l-red-500 border-t-0 border-r-0 border-b-0"
+              className="w-[300px] flex flex-col gap-1 p-4"
               side="right"
               align="center"
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 w-full">
                 <div
-                  className="w-4 h-4 rounded-sm"
+                  className="rounded-sm"
                   style={{
                     backgroundColor: colors[event.color || "blue"],
                     width: "20px",
                     height: "20px",
                   }}
-                ></div>
-                <h3 className="font-bold text-lg flex-1 text-left">
-                  {event.title}
-                </h3>
+                />
+                <h3 className="text-lg font-bold flex-1">{event.title}</h3>
 
                 <div className="flex gap-2">
                   <button
                     className="text-gray-500 hover:text-blue-700"
                     onClick={() => setIsEditMode(true)}
                   >
-                    <BsPencilFill className="text-gray-500" size={20} />
+                    <BsPencilFill size={20} />
                   </button>
+
                   <Dialog>
                     <DialogTrigger asChild>
                       <button className="text-gray-500 hover:text-red-700">
-                        <BsFillTrashFill className="text-gray-500" size={20} />
+                        <BsFillTrashFill size={20} color="red" />
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
@@ -792,52 +841,60 @@ export default function Home() {
                   </Dialog>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
-                {event.start &&
-                  (() => {
-                    const sameDay =
-                      event.start &&
-                      event.end &&
-                      format(event.start, "yyyy-MM-dd") ===
-                        format(event.end, "yyyy-MM-dd");
 
-                    if (event.isAllDay) {
-                      if (event.end && !sameDay) {
+              <div className="flex items-center gap-2 w-full">
+                {/* <BsClock className="text-gray-500" size={20} /> */}
+                <span style={{ width: "20px", height: "20px" }} />
+                <p className="text-sm text-gray-600 break-words">
+                  {event.start &&
+                    (() => {
+                      const sameDay =
+                        event.start &&
+                        event.end &&
+                        format(event.start, "yyyy-MM-dd") ===
+                          format(event.end, "yyyy-MM-dd");
+
+                      if (event.isAllDay) {
+                        if (event.end && !sameDay) {
+                          return (
+                            <>
+                              {format(event.start, "MMMM d, yyyy")} –{" "}
+                              {format(event.end, "MMMM d, yyyy")}
+                            </>
+                          );
+                        }
+                        return format(event.start, "MMMM d, yyyy");
+                      }
+
+                      if (event.end) {
+                        if (sameDay) {
+                          return (
+                            <>
+                              {format(event.start, "MMMM d, yyyy")},{" "}
+                              {format(event.start, "h:mm a")} –{" "}
+                              {format(event.end, "h:mm a")}
+                            </>
+                          );
+                        }
                         return (
                           <>
-                            {format(event.start, "MMMM d, yyyy")} –{" "}
-                            {format(event.end, "MMMM d, yyyy")}
+                            {format(event.start, "MMMM d, yyyy, h:mm a")} –{" "}
+                            {format(event.end, "MMMM d, yyyy, h:mm a")}
                           </>
                         );
                       }
-                      return format(event.start, "MMMM d, yyyy");
-                    }
 
-                    if (event.end) {
-                      if (sameDay) {
-                        return (
-                          <>
-                            {format(event.start, "MMMM d, yyyy")},{" "}
-                            {format(event.start, "h:mm a")} –{" "}
-                            {format(event.end, "h:mm a")}
-                          </>
-                        );
-                      }
-                      return (
-                        <>
-                          {format(event.start, "MMMM d, yyyy, h:mm a")} –{" "}
-                          {format(event.end, "MMMM d, yyyy, h:mm a")}
-                        </>
-                      );
-                    }
-
-                    // fallback if only start exists
-                    return format(event.start, "MMMM d, yyyy, h:mm a");
-                  })()}
-              </p>
+                      return format(event.start, "MMMM d, yyyy, h:mm a");
+                    })()}
+                </p>
+              </div>
 
               {event.notes && (
-                <p className="text-sm text-gray-600">{event.notes}</p>
+                <div className="flex items-center gap-2 w-full">
+                  <BsTextLeft className="text-gray-500" size={20} />
+                  {/* <span style={{ width: "20px", height: "20px" }} />  */}
+                  <p className="text-sm text-gray-600">{event.notes}</p>
+                </div>
               )}
             </PopoverContent>
           ) : (
