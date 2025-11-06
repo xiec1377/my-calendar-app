@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { Calendar as SmallCalendar } from "@/components/ui/calendar";
 import {
@@ -34,88 +32,33 @@ import { CalendarEvent } from "@/app/types/calendar";
 import EventForm from "./EventForm";
 import { colors } from "@/app/constants/colors";
 import { emptyEvent } from "@/app/constants/calendar";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  CustomEvent,
+  CustomHeader,
+  CustomToolbar,
+  CustomTimeGutterHeader,
+} from "./CustomCalendarComponents";
 
-const CustomEvent = ({ event }: any) => {
-  return <div className="font-bold">{event.title}</div>;
+const successToast = ({ message }: { message: string }) => {
+  toast.success(message, {
+    duration: 3000,
+    style: { background: "#c2ffdeff", color: "#009002ff" },
+    icon: <FaCheckCircle />,
+  });
 };
-const CustomTimeGutterHeader = () => {
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const offsetHours = moment.tz(tz).utcOffset() / 60;
-  const sign = offsetHours >= 0 ? "+" : "";
-  const tzAbbr = `GMT${sign}${offsetHours}`;
-  return (
-    <div className="rbc-time-gutter-header text-xs text-gray-600 flex items-center justify-center h-full w-full text-center">
-      {tzAbbr}
-    </div>
-  );
-};
-
-const CustomHeader = ({ label }: { label: string }) => {
-  const [day, date] = label.split(" ");
-  return (
-    <div className="flex flex-col items-center justify-center h-[40px] leading-none">
-      <span>{day}</span>
-      <span className="text-lg font-bold">{date}</span>
-    </div>
-  );
-};
-
-const CustomToolbar = ({ label, onNavigate, onView }: any) => {
-  // const buttonClasses =
-  //   "px-2 py-1 bg-transparent border-0 text-sm cursor-pointer focus:outline-none";
-  return (
-    <div className="rbc-toolbar flex w-full pb-4 m-0">
-      <button onClick={() => onNavigate("TODAY")}>Today</button>
-      <div className="rbc-btn-group">
-        <button id="prev-button" onClick={() => onNavigate("PREV")}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            className="lucide lucide-chevron-left size-4 rdp-chevron"
-            aria-hidden="true"
-          >
-            <path d="m15 18-6-6 6-6"></path>
-          </svg>
-        </button>
-        <span className="rbc-toolbar-label text-2xl">{label}</span>
-        <button id="next-button" onClick={() => onNavigate("NEXT")}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            className="lucide lucide-chevron-right size-4 rdp-chevron"
-            aria-hidden="true"
-          >
-            <path d="m9 18 6-6-6-6"></path>
-          </svg>
-        </button>
-      </div>
-      <div className="rbc-btn-group flex gap-2">
-        <button onClick={() => onView("day")}>Day</button>
-        <button onClick={() => onView("week")}>Week</button>
-        <button onClick={() => onView("month")}>Month</button>
-      </div>
-    </div>
-  );
+const errorToast = ({ message }: { message: string }) => {
+  toast.error(message, {
+    duration: 3000,
+    style: { background: "#ffbbbbff", color: "#dd1c1cff" },
+    icon: <MdError />,
+  });
 };
 
 const BigCalendar = () => {
+  const queryClient = useQueryClient();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [event, setEvent] = useState<CalendarEvent>(emptyEvent);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
@@ -123,6 +66,7 @@ const BigCalendar = () => {
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
 
   const localizer = momentLocalizer(moment);
   const formats = {
@@ -135,41 +79,54 @@ const BigCalendar = () => {
     dayHeaderFormat: (date: Date) => format(date, "MMMM d, yyyy"),
   };
 
-  const fetchEvents = async () => {
-    try {
+  const { data: events = [] } = useQuery({
+    queryKey: ["events"],
+    queryFn: async () => {
       const res = await fetch(
         `/api/events?date=${encodeURIComponent(
           new Date().toISOString().split("T")[0]
         )}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
+        { method: "GET", headers: { "Content-Type": "application/json" } }
       );
       const data = await res.json();
-      console.log("fetched events:", data.events);
-      const newEvents = data.events.map((e: any) => ({
+      return data.events.map((e: any) => ({
         ...e,
         start: new Date(e.start),
         end: new Date(e.end),
       }));
-      setEvents(newEvents);
-    } catch (error) {
-      console.error("error:", error);
-    }
-  };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: eventDetails } = useQuery({
+    queryKey: ["event", selectedEventId],
+    queryFn: async () => {
+      const res = await fetch(`/api/events/${selectedEventId}`);
+      const data = await res.json();
+      const e = data.event;
+      return {
+        ...e,
+        start: new Date(e.start),
+        startTime: new Date(e.start).toTimeString().slice(0, 5),
+        startDate: new Date(e.start).toISOString().split("T")[0],
+        end: new Date(e.end),
+        endTime: new Date(e.end).toTimeString().slice(0, 5),
+        endDate: new Date(e.end).toISOString().split("T")[0],
+      };
+    },
+    enabled: selectedEventId !== null,
+    staleTime: 10 * 60 * 1000,
+  });
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const handleClearEvent = () => {
-    setEvent(emptyEvent);
-  };
+    if (eventDetails) {
+      setEvent(eventDetails);
+      setSelectedEvent(eventDetails);
+    }
+  }, [eventDetails]);
 
   const handleCreateEvent = () => {
     const now = new Date();
-    console.log("now:", now);
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
     setEvent({
       title: "",
@@ -188,10 +145,7 @@ const BigCalendar = () => {
     setModalOpen(true);
   };
 
-  const handleSelectEvent = async (
-    event: CalendarEvent,
-    e: React.MouseEvent
-  ) => {
+  const handleSelectEvent = (event: CalendarEvent, e: React.MouseEvent) => {
     e.preventDefault();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     setPopoverPosition({
@@ -201,31 +155,7 @@ const BigCalendar = () => {
 
     setIsNewEvent(false);
     setModalOpen(true);
-
-    try {
-      const res = await fetch(`/api/events/${event.id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json();
-      console.log("Data:", data);
-      console.log("fetched events", data.event);
-      const e = data.event;
-      const selectedEvent: CalendarEvent = {
-        ...e,
-        start: new Date(e.start),
-        startTime: new Date(e.start).toTimeString().slice(0, 5),
-        startDate: new Date(e.start).toISOString().split("T")[0],
-        end: new Date(e.end),
-        endTime: new Date(e.end).toTimeString().slice(0, 5),
-        endDate: new Date(e.end).toISOString().split("T")[0],
-      };
-      console.log("selectedEvent:", selectedEvent);
-      setEvent(selectedEvent);
-      setSelectedEvent(selectedEvent);
-    } catch (error) {
-      console.error("Error fetching event:", error);
-    }
+    setSelectedEventId(event.id!); // This triggers the query
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,109 +166,110 @@ const BigCalendar = () => {
     }));
   };
 
+  const eventMutation = useMutation({
+    mutationFn: async ({ endpoint, method, body }: any) => {
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save event");
+      return res.json();
+    },
+    onSuccess: (data, variables) => {
+      const e = data.event;
+      const newEvent: CalendarEvent = {
+        ...e,
+        start: new Date(e.startTime || e.start),
+        startTime: new Date(e.startTime || e.start).toTimeString().slice(0, 5),
+        startDate: new Date(e.startTime || e.start).toISOString().split("T")[0],
+        end: new Date(e.endTime || e.end),
+        endTime: new Date(e.endTime || e.end).toTimeString().slice(0, 5),
+        endDate: new Date(e.endTime || e.end).toISOString().split("T")[0],
+      };
+
+      queryClient.setQueryData(["events"], (old: CalendarEvent[] = []) => {
+        if (variables.isNew) {
+          return [...old, newEvent];
+        } else {
+          return old.map((event) =>
+            event.id === newEvent.id ? newEvent : event
+          );
+        }
+      });
+
+      if (newEvent.id) {
+        queryClient.setQueryData(["event", newEvent.id], newEvent);
+      }
+      setModalOpen(false);
+      setIsEditMode(false);
+      setIsNewEvent(false);
+      successToast({
+        message: `${
+          variables.isNew ? "Created" : "Updated"
+        } event successfully!`,
+      });
+    },
+    onError: () => {
+      errorToast({
+        message: "Failed to save event...",
+      });
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const endpoint = isNewEvent ? "/api/events" : `/api/events/${event.id}`;
     const method = isNewEvent ? "POST" : "PATCH";
 
-    try {
-      const res = await fetch(endpoint, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: event?.title || "Untitled",
-          startDate: event?.startDate,
-          start: event.startTime, //combineDateAndTimeUTC(event?.startDate, event?.start),
-          endDate: event?.endDate,
-          end: event.endTime, // combineDateAndTimeUTC(event?.endDate, event?.end),
-          notes: event?.notes,
-          color: event?.color,
-          isAllDay: event?.isAllDay || false,
-        }),
-      });
-
-      const data = await res.json();
-      console.log(isNewEvent ? "Created:" : "Updated:", data.event);
-      const e = data.event;
-      const newEvent: CalendarEvent = {
-        ...e,
-        start: new Date(e.startTime),
-        startTime: new Date(e.startTime).toTimeString().slice(0, 5),
-        startDate: new Date(e.startTime).toISOString().split("T")[0],
-        end: new Date(e.endTime),
-        endTime: new Date(e.endTime).toTimeString().slice(0, 5),
-        endDate: new Date(e.endTime).toISOString().split("T")[0],
-      };
-
-      setEvents((prev) => {
-        if (isNewEvent) {
-          return [...prev, newEvent];
-        } else {
-          return prev.map((event) =>
-            event.id === newEvent.id ? newEvent : event
-          );
-        }
-      });
-      console.log("new events:", events);
-      setModalOpen(false);
-      setIsEditMode(false);
-      toast.success(
-        `${isNewEvent ? "Created" : "Updated"} event successfully!`,
-        {
-          duration: 3000,
-          style: {
-            background: "#5fe89fff",
-            color: "#009002ff",
-          },
-          icon: <FaCheckCircle />,
-        }
-      );
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to delete event...", {
-        duration: 3000,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-        },
-        icon: <MdError />,
-      });
-    }
+    eventMutation.mutate({
+      endpoint,
+      method,
+      isNew: isNewEvent,
+      body: {
+        title: event?.title || "Untitled",
+        startDate: event?.startDate,
+        start: event.startTime,
+        endDate: event?.endDate,
+        end: event.endTime,
+        notes: event?.notes,
+        color: event?.color,
+        isAllDay: event?.isAllDay || false,
+      },
+    });
   };
 
-  const handleDeleteEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch(`/api/events/${event.id}`, {
+  const deleteMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      const res = await fetch(`/api/events/${eventId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
-      const data = await res.json();
-      console.log("Deleted:", data);
-
-      // await fetchEvents();
-      setEvents((prev) => prev.filter((e) => e.id !== event.id));
+      if (!res.ok) throw new Error("Failed to delete event");
+      return res.json();
+    },
+    onSuccess: (data, eventId) => {
+      queryClient.setQueryData(["events"], (old: CalendarEvent[] = []) =>
+        old.filter((e) => e.id !== eventId)
+      );
+      queryClient.removeQueries({ queryKey: ["event", eventId] });
       setModalOpen(false);
-      toast.success("Deleted event successfully!", {
-        duration: 3000,
-        style: {
-          background: "#5fe89fff",
-          color: "#009002ff",
-        },
-        icon: <FaCheckCircle />,
+      successToast({
+        message: "Deleted event successfully!",
       });
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to delete event...", {
-        duration: 3000,
-        style: {
-          background: "#FEE2E2",
-          color: "#B91C1C",
-        },
-        icon: <MdError />,
+    },
+    onError: () => {
+      errorToast({
+        message: "Failed to delete event...",
       });
+    },
+  });
+
+  const handleDeleteEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (event.id) {
+      deleteMutation.mutate(event.id);
     }
   };
 
@@ -365,7 +296,7 @@ const BigCalendar = () => {
           onSelect={setDate}
           className="rounded-md border shadow-sm"
           captionLayout="dropdown"
-        />{" "}
+        />
         <div className="flex flex-col gap-2">
           <Label className="text-gray-700 dark:text-gray-300 font-medium">
             Filter by color:
@@ -384,9 +315,7 @@ const BigCalendar = () => {
                     setSelectedColors([]);
                   }
                 }}
-                style={{
-                  accentColor: "#000000",
-                }}
+                style={{ accentColor: "#000000" }}
                 className="h-4 w-4 accent-gray-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -411,10 +340,8 @@ const BigCalendar = () => {
                       );
                     }
                   }}
-                  className="h-4 w-4 cursor-pointer rounded-sm "
-                  style={{
-                    accentColor: hex,
-                  }}
+                  className="h-4 w-4 cursor-pointer rounded-sm"
+                  style={{ accentColor: hex }}
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
                   {key}
@@ -426,7 +353,7 @@ const BigCalendar = () => {
       </div>
 
       <main className="flex w-full flex-row items-center justify-between sm:items-start">
-        <div className="mr-8 mt-8 mt-8 h-screen w-full">
+        <div className="mr-8 mt-8 h-screen w-full">
           <Toaster
             position="bottom-right"
             reverseOrder={false}
@@ -449,14 +376,13 @@ const BigCalendar = () => {
             endAccessor="end"
             views={["month", "week", "day"]}
             date={date}
-            defaultView="month"
+            defaultView="week"
             formats={formats}
             components={{
               toolbar: CustomToolbar,
               timeGutterHeader: CustomTimeGutterHeader,
               week: { header: CustomHeader },
               event: CustomEvent,
-              // eventWrapper: CustomerEventWrapper,
             }}
             onNavigate={(date) => setDate(date)}
             onSelectEvent={handleSelectEvent}
@@ -480,6 +406,7 @@ const BigCalendar = () => {
               setIsEditMode(false);
               setIsNewEvent(false);
               setSelectedEvent(null);
+              setSelectedEventId(null);
             }
           }}
         >
@@ -543,7 +470,6 @@ const BigCalendar = () => {
               </div>
 
               <div className="flex items-center gap-2 w-full">
-                {/* <BsClock className="text-gray-500" size={20} /> */}
                 <span style={{ width: "20px", height: "20px" }} />
                 <p className="text-sm text-gray-600 break-words">
                   {event.start &&
@@ -592,7 +518,6 @@ const BigCalendar = () => {
               {event.notes && (
                 <div className="flex items-center gap-2 w-full">
                   <BsTextLeft className="text-gray-500" size={20} />
-                  {/* <span style={{ width: "20px", height: "20px" }} />  */}
                   <p className="text-sm text-gray-600">{event.notes}</p>
                 </div>
               )}
@@ -607,8 +532,8 @@ const BigCalendar = () => {
               onCancel={() => {
                 setIsEditMode(false);
                 setIsNewEvent(false);
-                // handleClearEvent();
                 setSelectedEvent(null);
+                setSelectedEventId(null);
                 if (isNewEvent) setModalOpen(false);
               }}
               isNew={isNewEvent}
@@ -619,5 +544,4 @@ const BigCalendar = () => {
     </div>
   );
 };
-
 export default BigCalendar;

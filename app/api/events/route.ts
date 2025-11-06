@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-// import { PrismaClient } from "@/lib/generated/prisma";
-
-// import { PrismaClient } from '@prisma/client'
-
-// const prisma = new PrismaClient()
-
-import { startOfDay, endOfDay, parseISO } from 'date-fns'
-import { is } from 'date-fns/locale'
 import { combineDateAndTimeUTC } from "@/lib/dateUtils";
 
-// GET: Return all events (optional, for testing)
+// GET: return all events 
 export async function GET(req: Request) {
   console.log('here')
   try {
@@ -23,10 +15,8 @@ export async function GET(req: Request) {
         { status: 400 },
       )
 
-    const dayStart = startOfDay(parseISO(dateParam))
-    const dayEnd = endOfDay(parseISO(dateParam))
-    console.log('dayStart::::', dayStart, 'dayEnd::::', dayEnd)
-    console.log('new date::::', new Date())
+    // const dayStart = startOfDay(parseISO(dateParam))
+    // const dayEnd = endOfDay(parseISO(dateParam))
     const events = await prisma.calendarEvent
       .findMany
       // {
@@ -39,7 +29,6 @@ export async function GET(req: Request) {
       // orderBy: { startTime: 'asc' },
       // }
       ()
-    console.log('eventss::::::', events)
 
     const dto = events.map((e) => ({
       id: e.id,
@@ -61,11 +50,10 @@ export async function GET(req: Request) {
   }
 }
 
-// POST: Add new event
+// POST: add new event
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    console.log('body---', body)
     const {
       title,
       startDate,
@@ -81,10 +69,10 @@ export async function POST(req: Request) {
     //   return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     // }
 
-    console.log('current time:', new Date())
-    console.log('start:', start, combineDateAndTimeUTC(startDate, start))
-    console.log('end:', end, combineDateAndTimeUTC(endDate, end))
-    console.log('isAllDay:', isAllDay)
+    // console.log('current time:', new Date())
+    // console.log('start:', start, combineDateAndTimeUTC(startDate, start))
+    // console.log('end:', end, combineDateAndTimeUTC(endDate, end))
+    // console.log('isAllDay:', isAllDay)
 
     const newEvent = await prisma.calendarEvent.create({
       data: {
@@ -96,7 +84,6 @@ export async function POST(req: Request) {
         isAllDay: isAllDay || false,
       },
     })
-
 
     return NextResponse.json({
       message: 'Event added successfully',

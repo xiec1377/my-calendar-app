@@ -20,14 +20,11 @@ import {
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
 import { RiFontSize } from "react-icons/ri";
-import {
-  BsTextLeft,
-  BsClock,
-  BsArrowDown,
-} from "react-icons/bs";
+import { BsTextLeft, BsClock, BsArrowDown } from "react-icons/bs";
 import { MdClose } from "react-icons/md";
 import { CalendarEvent } from "@/app/types/calendar";
 import { colors } from "@/app/constants/colors";
+import { emptyEvent } from "@/app/constants/calendar";
 
 const EventForm = ({
   event,
@@ -103,6 +100,7 @@ const EventForm = ({
             name="startDate"
             type="date"
             className="flex-[1]"
+            value={event.startDate}
           />
           {!event.isAllDay && (
             <Input

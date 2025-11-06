@@ -1,15 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-// import { PrismaClient } from "@/lib/generated/prisma";
-
-// import { PrismaClient } from '@prisma/client'
-
-// const prisma = new PrismaClient()
-
-import { startOfDay, endOfDay, parseISO } from 'date-fns'
-import { start } from 'repl'
 import { combineDateAndTimeUTC } from '@/lib/dateUtils'
 
+// GET: event given id param
 export async function GET(
   req: Request,
   context: { params: Promise<{ id: string }> },
@@ -24,24 +17,8 @@ export async function GET(
   const dto = {
     id: event.id,
     title: event.title,
-    // startDate: event.startTime
-    //   ? event.startTime.toISOString().split('T')[0]
-    //   : '',
     start: event.startTime ? event.startTime : '',
     end: event.endTime ? event.endTime : '',
-
-    // startDate: event.startTime
-    //   ? new Date(event.startTime).toISOString().split('T')[0]
-    //   : '',
-    // start: event.startTime
-    //   ? new Date(event.startTime).toTimeString().slice(0, 5)
-    //   : '',
-    // endDate: event.endTime
-    //   ? new Date(event.endTime).toISOString().split('T')[0]
-    //   : '',
-    // end: event.endTime
-    //   ? new Date(event.endTime).toTimeString().slice(0, 5)
-    //   : '',
     notes: event.notes || '',
     color: event.color || 'blue',
     isAllDay: event.isAllDay || false,
@@ -52,6 +29,8 @@ export async function GET(
   return NextResponse.json({ event: dto })
 }
 
+
+// PATCH: updates to event given id param
 export async function PATCH(
   req: Request,
   context: { params: Promise<{ id: string }> },
@@ -77,7 +56,6 @@ export async function PATCH(
     if (!existingEvent) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
-
     const updatedEvent = await prisma.calendarEvent.update({
       where: { id },
       data: {
@@ -89,7 +67,6 @@ export async function PATCH(
         isAllDay: isAllDay || false,
       },
     })
-
     return NextResponse.json({
       message: 'Event updated successfully',
       event: updatedEvent,
@@ -103,6 +80,7 @@ export async function PATCH(
   }
 }
 
+// DELETE: remove event
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> },
