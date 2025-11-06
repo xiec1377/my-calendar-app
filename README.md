@@ -37,3 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 - tailwind, shadcd ux components
 - prisma postgresql db
+`npm run dev`
+`npx prisma dev`
+
+`npx prisma studio`
