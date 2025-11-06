@@ -33,6 +33,7 @@ import toast from "react-hot-toast";
 import { CalendarEvent } from "@/app/types/calendar";
 import EventForm from "./EventForm";
 import { colors } from "@/app/constants/colors";
+import { emptyEvent } from "@/app/constants/calendar";
 
 const CustomEvent = ({ event }: any) => {
   return <div className="font-bold">{event.title}</div>;
@@ -111,23 +112,13 @@ const CustomToolbar = ({ label, onNavigate, onView }: any) => {
   );
 };
 
-const emptyEvent: CalendarEvent = {
-  title: "",
-  isAllDay: false,
-  startDate: "",
-  endDate: "",
-  startTime: "",
-  endTime: "",
-  start: "",
-  end: "",
-  notes: "",
-  color: "",
-};
-
 const BigCalendar = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [event, setEvent] = useState<CalendarEvent>(emptyEvent);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
@@ -169,7 +160,6 @@ const BigCalendar = () => {
   };
 
   useEffect(() => {
-    console.log("fetche eventgs....");
     fetchEvents();
   }, []);
 
@@ -183,8 +173,8 @@ const BigCalendar = () => {
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
     setEvent({
       title: "",
-      startDate: now.toISOString().split("T")[0],
       start: now,
+      startDate: now.toISOString().split("T")[0],
       startTime: now.toTimeString().slice(0, 5),
       end: oneHourLater,
       endDate: oneHourLater.toISOString().split("T")[0],
@@ -232,6 +222,7 @@ const BigCalendar = () => {
       };
       console.log("selectedEvent:", selectedEvent);
       setEvent(selectedEvent);
+      setSelectedEvent(selectedEvent);
     } catch (error) {
       console.error("Error fetching event:", error);
     }
@@ -488,6 +479,7 @@ const BigCalendar = () => {
             if (!isOpen) {
               setIsEditMode(false);
               setIsNewEvent(false);
+              setSelectedEvent(null);
             }
           }}
         >
@@ -504,7 +496,7 @@ const BigCalendar = () => {
             />
           </PopoverTrigger>
 
-          {!isEditMode && !isNewEvent && event && event.id ? (
+          {!isEditMode && !isNewEvent && selectedEvent && (
             <PopoverContent
               className="w-[300px] flex flex-col gap-1 p-4"
               side="right"
@@ -605,7 +597,8 @@ const BigCalendar = () => {
                 </div>
               )}
             </PopoverContent>
-          ) : (
+          )}
+          {(isEditMode || isNewEvent) && (
             <EventForm
               event={event}
               setEvent={setEvent}
@@ -615,6 +608,7 @@ const BigCalendar = () => {
                 setIsEditMode(false);
                 setIsNewEvent(false);
                 // handleClearEvent();
+                setSelectedEvent(null);
                 if (isNewEvent) setModalOpen(false);
               }}
               isNew={isNewEvent}
