@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 
 import { startOfDay, endOfDay, parseISO } from 'date-fns'
 import { start } from 'repl'
+import { combineDateAndTimeUTC } from '@/lib/dateUtils'
 
 export async function GET(
   req: Request,
@@ -58,9 +59,17 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const body = await req.json()
-    const { title, startTime, endTime, notes, color } = body
+    const {
+      title,
+      startDate,
+      start,
+      endDate,
+      end,
+      notes,
+      color,
+      isAllDay,
+    } = body
 
-    // Check if event exists
     const existingEvent = await prisma.calendarEvent.findUnique({
       where: { id },
     })
@@ -69,16 +78,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
 
-    // Update event
     const updatedEvent = await prisma.calendarEvent.update({
       where: { id },
       data: {
-        title: title ?? existingEvent.title,
-        startTime: startTime ? new Date(startTime) : existingEvent.startTime,
-        endTime: endTime ? new Date(endTime) : existingEvent.endTime,
-        notes: notes ?? existingEvent.notes,
-        color: color ?? existingEvent.color,
-        isAllDay: body.isAllDay ?? existingEvent.isAllDay,
+        title: title,
+        startTime: combineDateAndTimeUTC(startDate, start),
+        endTime: combineDateAndTimeUTC(endDate, end),
+        notes: notes || '',
+        color: color || 'blue',
+        isAllDay: isAllDay || false,
       },
     })
 

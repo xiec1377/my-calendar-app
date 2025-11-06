@@ -97,7 +97,6 @@ export async function POST(req: Request) {
       },
     })
 
-    console.log('newEvent:', newEvent)
 
     return NextResponse.json({
       message: 'Event added successfully',
