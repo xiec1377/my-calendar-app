@@ -23,6 +23,7 @@
   justify-content: space-between !important;
   gap: 1rem;
   flex-wrap: wrap;
+  margin: 0px !important;
 }
 
 .rbc-toolbar button {

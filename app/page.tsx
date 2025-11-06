@@ -35,6 +35,8 @@ import {
   BsPencilFill,
   BsFillTrashFill,
 } from "react-icons/bs";
+import { LuTrash2 } from "react-icons/lu";
+import { LuPencil } from "react-icons/lu";
 import { MdError } from "react-icons/md";
 import { MdClose } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
@@ -110,7 +112,7 @@ const CustomToolbar = ({ label, onNavigate, onView }: any) => {
   // const buttonClasses =
   //   "px-2 py-1 bg-transparent border-0 text-sm cursor-pointer focus:outline-none";
   return (
-    <div className="rbc-toolbar flex w-full pb-4">
+    <div className="rbc-toolbar flex w-full pb-4 m-0">
       <button onClick={() => onNavigate("TODAY")}>Today</button>
       <div className="rbc-btn-group">
         <button id="prev-button" onClick={() => onNavigate("PREV")}>
@@ -173,12 +175,12 @@ type CalendarEvent = {
 };
 
 const colors: Record<string, string> = {
-  red: "#EF4444",
-  green: "#22C55E",
+  red: "#dd1c1cff",
+  green: "#299c53ff",
   blue: "#3B82F6",
-  yellow: "#FACC15",
+  yellow: "#ffdd00ff",
   purple: "#A855F7",
-  orange: "#F97316",
+  orange: "#dd630dff",
 };
 
 const emptyEvent: CalendarEvent = {
@@ -330,10 +332,13 @@ const EventForm = ({
               }));
             }}
             className="h-4 w-4 "
+            style={{
+              accentColor: "#000000",
+            }}
           />
           <Label
             htmlFor="isAllDay"
-            className="text-sm font-normal leading-none"
+            className="text-sm font-normal leading-none cursor-pointer"
           >
             All day
           </Label>
@@ -684,19 +689,20 @@ export default function Home() {
     }
   };
 
-  const [colorFilter, setColorFilter] = useState<string>("all");
+  // const [colorFilter, setColorFilter] = useState<string>("all");
+  const [selectedColors, setSelectedColors] = useState<string[]>(
+    Object.keys(colors)
+  );
 
-  // Filter events by color
-  const filteredEvents =
-    colorFilter === "all"
-      ? events
-      : events.filter((e) => e.color === colorFilter);
+  const filteredEvents = events.filter((event) =>
+    selectedColors.includes(event.color || "")
+  );
 
   return (
     <div className="flex w-full h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black">
       <div className="flex h-full flex-col gap-4 p-8">
         <Button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-black text-white font-bold py-2 px-4 rounded"
           onClick={handleCreateEvent}
         >
           + Create
@@ -708,21 +714,62 @@ export default function Home() {
           className="rounded-md border shadow-sm"
           captionLayout="dropdown"
         />{" "}
-        <div className="flex items-center gap-2">
-          <label className="text-gray-700 dark:text-gray-300">
+        <div className="flex flex-col gap-2">
+          <Label className="text-gray-700 dark:text-gray-300 font-medium">
             Filter by color:
-          </label>
-          <select
-            value={colorFilter}
-            onChange={(e) => setColorFilter(e.target.value)}
-            className="rounded border px-2 py-1 text-sm"
-          >
-            {Object.entries(colors).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
+          </Label>
+          <div className="flex flex-col gap-2 items-start">
+            <Label className="flex items-center gap-1 cursor-pointer">
+              <Input
+                type="checkbox"
+                checked={Object.keys(colors).every((key) =>
+                  selectedColors.includes(key)
+                )}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedColors(Object.keys(colors));
+                  } else {
+                    setSelectedColors([]);
+                  }
+                }}
+                style={{
+                  accentColor: "#000000",
+                }}
+                className="h-4 w-4 accent-gray-500"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                All
+              </span>
+            </Label>
+
+            {Object.entries(colors).map(([key, hex]) => (
+              <Label
+                key={key}
+                className="flex items-center gap-1 cursor-pointer"
+              >
+                <Input
+                  type="checkbox"
+                  checked={selectedColors.includes(key)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedColors((prev) => [...prev, key]);
+                    } else {
+                      setSelectedColors((prev) =>
+                        prev.filter((c) => c !== key)
+                      );
+                    }
+                  }}
+                  className="h-4 w-4 cursor-pointer rounded-sm "
+                  style={{
+                    accentColor: hex,
+                  }}
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                  {key}
+                </span>
+              </Label>
             ))}
-          </select>
+          </div>
         </div>
       </div>
 
@@ -818,13 +865,13 @@ export default function Home() {
                     className="text-gray-500 hover:text-blue-700"
                     onClick={() => setIsEditMode(true)}
                   >
-                    <BsPencilFill size={20} />
+                    <LuPencil size={20} color="black" />
                   </button>
 
                   <Dialog>
                     <DialogTrigger asChild>
                       <button className="text-gray-500 hover:text-red-700">
-                        <BsFillTrashFill size={20} color="red" />
+                        <LuTrash2 size={20} color="#dd1c1cff" />
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">

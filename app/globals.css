@@ -137,3 +137,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: pointer;  */
   /* filter: invert(100%) brightness(200%); */
 }
+
+Input[type="checkbox"] {
+  border: 1px solid var(--border) !important;
+}
