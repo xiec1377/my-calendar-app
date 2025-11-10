@@ -67,7 +67,7 @@ const BigCalendar = () => {
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const localizer = momentLocalizer(moment);
   const formats = {
