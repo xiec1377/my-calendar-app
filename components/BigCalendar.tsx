@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { endOfDay, format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
@@ -48,6 +48,7 @@ const successToast = ({ message }: { message: string }) => {
     icon: <FaCheckCircle />,
   });
 };
+
 const errorToast = ({ message }: { message: string }) => {
   toast.error(message, {
     duration: 3000,
@@ -61,13 +62,15 @@ const BigCalendar = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [event, setEvent] = useState<CalendarEvent>(emptyEvent);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null,
+    null
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
   const [isEditMode, setIsEditMode] = useState(false);
   const [isNewEvent, setIsNewEvent] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<
+    number | string | null
+  >(null);
 
   const localizer = momentLocalizer(moment);
   const formats = {
@@ -84,13 +87,11 @@ const BigCalendar = () => {
     queryKey: ["events"],
     queryFn: async () => {
       const res = await fetch(
-        `/api/events?date=${encodeURIComponent(
-          new Date().toISOString().split("T")[0],
-        )}`,
-        { method: "GET", headers: { "Content-Type": "application/json" } },
+        `/api/events?date=${encodeURIComponent(new Date().toISOString().split("T")[0])}`,
+        { method: "GET", headers: { "Content-Type": "application/json" } }
       );
       const data = await res.json();
-      return data.events.map((e: any) => ({
+      return data.events.map((e: CalendarEvent) => ({
         ...e,
         start: new Date(e.start),
         end: new Date(e.end),
@@ -146,9 +147,16 @@ const BigCalendar = () => {
     setModalOpen(true);
   };
 
-  const handleSelectEvent = (event: CalendarEvent, e: React.MouseEvent) => {
+  const handleSelectEvent = (
+    event: CalendarEvent,
+    e: React.SyntheticEvent<HTMLElement, Event>
+  ) => {
     e.preventDefault();
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
+
+    // Narrow the event target to an HTMLElement
+    const target = e.target as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
     setPopoverPosition({
       x: rect.right,
       y: rect.top + rect.height / 2,
@@ -156,7 +164,11 @@ const BigCalendar = () => {
 
     setIsNewEvent(false);
     setModalOpen(true);
-    setSelectedEventId(event.id!); // This triggers the query
+
+    // Ensure event.id exists and is stored as string
+    if (event.id) {
+      setSelectedEventId(event.id.toString());
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +206,7 @@ const BigCalendar = () => {
           return [...old, newEvent];
         } else {
           return old.map((event) =>
-            event.id === newEvent.id ? newEvent : event,
+            event.id === newEvent.id ? newEvent : event
           );
         }
       });
@@ -202,19 +214,17 @@ const BigCalendar = () => {
       if (newEvent.id) {
         queryClient.setQueryData(["event", newEvent.id], newEvent);
       }
+
       setModalOpen(false);
       setIsEditMode(false);
       setIsNewEvent(false);
+
       successToast({
-        message: `${
-          variables.isNew ? "Created" : "Updated"
-        } event successfully!`,
+        message: `${variables.isNew ? "Created" : "Updated"} event successfully!`,
       });
     },
     onError: () => {
-      errorToast({
-        message: "Failed to save event...",
-      });
+      errorToast({ message: "Failed to save event..." });
     },
   });
 
@@ -242,7 +252,7 @@ const BigCalendar = () => {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: async (eventId: number) => {
+    mutationFn: async (eventId: number | string) => {
       const res = await fetch(`/api/events/${eventId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -252,34 +262,31 @@ const BigCalendar = () => {
     },
     onSuccess: (data, eventId) => {
       queryClient.setQueryData(["events"], (old: CalendarEvent[] = []) =>
-        old.filter((e) => e.id !== eventId),
+        old.filter((e) => e.id !== eventId)
       );
       queryClient.removeQueries({ queryKey: ["event", eventId] });
+
       setModalOpen(false);
-      successToast({
-        message: "Deleted event successfully!",
-      });
+      successToast({ message: "Deleted event successfully!" });
     },
     onError: () => {
-      errorToast({
-        message: "Failed to delete event...",
-      });
+      errorToast({ message: "Failed to delete event..." });
     },
   });
 
   const handleDeleteEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (event.id) {
+    if (event.id !== undefined && event.id !== null) {
       deleteMutation.mutate(event.id);
     }
   };
 
   const [selectedColors, setSelectedColors] = useState<string[]>(
-    Object.keys(colors),
+    Object.keys(colors)
   );
 
-  const filteredEvents = events.filter((event) =>
-    selectedColors.includes(event.color || ""),
+  const filteredEvents = events.filter((event: CalendarEvent) =>
+    selectedColors.includes(event.color || "")
   );
 
   return (
@@ -307,7 +314,7 @@ const BigCalendar = () => {
               <Input
                 type="checkbox"
                 checked={Object.keys(colors).every((key) =>
-                  selectedColors.includes(key),
+                  selectedColors.includes(key)
                 )}
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -337,7 +344,7 @@ const BigCalendar = () => {
                       setSelectedColors((prev) => [...prev, key]);
                     } else {
                       setSelectedColors((prev) =>
-                        prev.filter((c) => c !== key),
+                        prev.filter((c) => c !== key)
                       );
                     }
                   }}
@@ -546,4 +553,5 @@ const BigCalendar = () => {
     </div>
   );
 };
+
 export default BigCalendar;
