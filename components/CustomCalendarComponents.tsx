@@ -1,8 +1,6 @@
-
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../styles/calendar.css";
 import moment from "moment-timezone";
-
 
 export const CustomEvent = ({ event }: any) => {
   return <div className="font-bold">{event.title}</div>;

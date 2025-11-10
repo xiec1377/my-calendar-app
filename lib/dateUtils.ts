@@ -6,19 +6,19 @@ export function combineDateAndTimeUTC(
   dateStr: string,
   timeStr: string,
 ): string | null {
-  console.log('here')
-  if (!dateStr || !timeStr) return null 
-  console.log('dateStr:', dateStr, 'timeStr:', timeStr)
+  console.log("here");
+  if (!dateStr || !timeStr) return null;
+  console.log("dateStr:", dateStr, "timeStr:", timeStr);
 
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const [hours, minutes] = timeStr.split(':').map(Number)
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
 
-  console.log('another year')
+  console.log("another year");
 
   // Create Date in local time
-  const localDate = new Date(year, month - 1, day, hours, minutes)
+  const localDate = new Date(year, month - 1, day, hours, minutes);
 
-  console.log('localDate.toISOString():', localDate)
+  console.log("localDate.toISOString():", localDate);
   // Convert to UTC ISO string
-  return localDate.toISOString()
+  return localDate.toISOString();
 }

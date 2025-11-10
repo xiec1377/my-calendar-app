@@ -46,7 +46,6 @@ import toast from "react-hot-toast";
 import { CalendarEvent } from "@/app/types/calendar";
 import BigCalendar from "@/components/BigCalendar";
 
-
 export default function Home() {
   return <BigCalendar />;
 }

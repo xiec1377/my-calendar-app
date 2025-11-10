@@ -61,7 +61,7 @@ const BigCalendar = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [event, setEvent] = useState<CalendarEvent>(emptyEvent);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
-    null
+    null,
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
@@ -85,9 +85,9 @@ const BigCalendar = () => {
     queryFn: async () => {
       const res = await fetch(
         `/api/events?date=${encodeURIComponent(
-          new Date().toISOString().split("T")[0]
+          new Date().toISOString().split("T")[0],
         )}`,
-        { method: "GET", headers: { "Content-Type": "application/json" } }
+        { method: "GET", headers: { "Content-Type": "application/json" } },
       );
       const data = await res.json();
       return data.events.map((e: any) => ({
@@ -194,7 +194,7 @@ const BigCalendar = () => {
           return [...old, newEvent];
         } else {
           return old.map((event) =>
-            event.id === newEvent.id ? newEvent : event
+            event.id === newEvent.id ? newEvent : event,
           );
         }
       });
@@ -252,7 +252,7 @@ const BigCalendar = () => {
     },
     onSuccess: (data, eventId) => {
       queryClient.setQueryData(["events"], (old: CalendarEvent[] = []) =>
-        old.filter((e) => e.id !== eventId)
+        old.filter((e) => e.id !== eventId),
       );
       queryClient.removeQueries({ queryKey: ["event", eventId] });
       setModalOpen(false);
@@ -275,11 +275,11 @@ const BigCalendar = () => {
   };
 
   const [selectedColors, setSelectedColors] = useState<string[]>(
-    Object.keys(colors)
+    Object.keys(colors),
   );
 
   const filteredEvents = events.filter((event) =>
-    selectedColors.includes(event.color || "")
+    selectedColors.includes(event.color || ""),
   );
 
   return (
@@ -307,7 +307,7 @@ const BigCalendar = () => {
               <Input
                 type="checkbox"
                 checked={Object.keys(colors).every((key) =>
-                  selectedColors.includes(key)
+                  selectedColors.includes(key),
                 )}
                 onChange={(e) => {
                   if (e.target.checked) {
@@ -337,7 +337,7 @@ const BigCalendar = () => {
                       setSelectedColors((prev) => [...prev, key]);
                     } else {
                       setSelectedColors((prev) =>
-                        prev.filter((c) => c !== key)
+                        prev.filter((c) => c !== key),
                       );
                     }
                   }}

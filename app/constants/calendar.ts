@@ -1,14 +1,14 @@
-import { CalendarEvent } from '@/app/types/calendar'
+import { CalendarEvent } from "@/app/types/calendar";
 
 export const emptyEvent: CalendarEvent = {
-  title: '',
+  title: "",
   isAllDay: false,
-  startDate: '',
-  endDate: '',
-  startTime: '',
-  endTime: '',
-  start: '',
-  end: '',
-  notes: '',
-  color: '',
-}
+  startDate: "",
+  endDate: "",
+  startTime: "",
+  endTime: "",
+  start: "",
+  end: "",
+  notes: "",
+  color: "",
+};
