@@ -50,6 +50,35 @@ const EventForm = ({
       }
     }
   };
+
+  const handleEndChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onChange(e);
+
+    const { startDate, startTime, endDate, endTime } = event;
+
+    const updatedEndDate = name === "endDate" ? value : endDate;
+    const updatedEndTime = name === "endTime" ? value : endTime;
+
+    if (!updatedEndDate || !updatedEndTime || !startDate || !startTime) return;
+
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${updatedEndDate}T${updatedEndTime}`);
+
+    if (end < start) {
+      const newStart = new Date(end.getTime() - 60 * 60 * 1000);
+
+      const newStartDate = newStart.toISOString().split("T")[0];
+      const newStartTime = newStart.toTimeString().slice(0, 5);
+
+      onChange({ target: { name: "startDate", value: newStartDate } } as any);
+      onChange({ target: { name: "startTime", value: newStartTime } } as any);
+    }
+
+    onChange({ target: { name: "endDate", value: updatedEndDate } } as any);
+    onChange({ target: { name: "endTime", value: updatedEndTime } } as any);
+  };
+
   return (
     <PopoverContent
       className="w-full flex flex-col gap-y-4"
@@ -110,7 +139,7 @@ const EventForm = ({
             name="endDate"
             type="date"
             className="flex-[1]"
-            onChange={onChange}
+            onChange={handleEndChange}
             value={event.endDate}
             min={event.startDate}
           />
@@ -120,7 +149,7 @@ const EventForm = ({
               name="endTime"
               type="time"
               className="flex-[1]"
-              onChange={onChange}
+              onChange={handleEndChange}
               value={event.endTime}
               min={event.startTime}
             />
