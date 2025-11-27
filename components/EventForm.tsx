@@ -18,14 +18,12 @@ const EventForm = ({
   onChange,
   onSubmit,
   onCancel,
-  isNew,
 }: {
   event: CalendarEvent;
   setEvent: React.Dispatch<React.SetStateAction<CalendarEvent>>;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
-  isNew: boolean;
 }) => {
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
